@@ -7,24 +7,27 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<meta name="color-scheme" content="dark light">
+<script>try{var tm=localStorage.getItem("tema");if(tm==="light"||tm==="dark")document.documentElement.dataset.theme=tm}catch(e){}</script>
 </head>
 <body>
+<a class="skip" href="#modelo">Pular para o conteúdo</a>
 <div id="lvl" aria-hidden="true"><i></i></div><div class="cur" aria-hidden="true"></div><canvas id="nt" aria-hidden="true"></canvas>
 <header><nav aria-label="Principal"><b>Endócrino</b>
 <a href="#modelo">Modelo 3D</a><a href="#basico">Básico</a><a href="#acao">Ação</a><a href="#feedback">Feedback</a><a href="#glicemia">Glicemia</a><a href="#microscopio">Microscópio</a><a href="#tabela">Tabela</a><a href="#doencas">Doenças</a><a href="#vida">Vida</a><a href="#habitos">Hábitos</a><a href="#estresse">Estresse</a><a href="#cortisol">Cortisol</a><a href="#melatonina">Melatonina</a><a href="#ciclo">Ciclo</a><a href="#mitos">Mitos</a><a href="#jogo">Jogo</a><a href="#quiz">Quiz</a><a href="#glossario">Glossário</a></nav>
-<button id="th" aria-label="Alternar modo claro e escuro">◐</button></header>
+<button id="th" type="button" aria-label="Modo claro" aria-pressed="false" title="Alternar modo claro e escuro">◐</button></header>
 <main>
 <section id="hero"><canvas id="hc" aria-hidden="true"></canvas>
 <div class="hero-t"><p class="eyebrow">Sistema endócrino humano</p><h1 id="t">O sistema que conversa com o seu corpo em silêncio</h1>
-<p>Glândulas, hormônios e mensagens químicas que regulam crescimento, energia, sono, humor e reprodução.</p><a class="btn" href="#modelo">Entrar no corpo ↓</a><p class="aviso"><b>Aviso:</b> site educativo. Não substitui orientação médica.</p></div></section>
+<p>Glândulas, hormônios e mensagens químicas que regulam crescimento, energia, sono, humor e reprodução.</p><a class="btn" href="#modelo">Entrar no corpo ↓</a><p class="aviso"><b>Aviso:</b> site educativo. Não substitui orientação médica.</p></div><button id="skp" class="skipb" type="button">Pular abertura ⤓</button></section>
 
-<section id="modelo"><h2>Modelo 3D interativo</h2>
+<section id="modelo" tabindex="-1"><h2>Modelo 3D interativo</h2>
 <p class="lead">Arraste para os lados para girar, use Ctrl + rolagem ou pinça para zoom, toque numa glândula para voar até ela.</p>
 <div class="bar" role="group" aria-label="Controles do modelo">
 <button data-l="g">Só glândulas</button><button data-l="b" class="on">Corpo + glândulas</button><button data-l="v">+ Fluxo no sangue</button>
 <button id="sx" aria-pressed="false">Gônadas: testículos</button><button id="rs">Recentralizar</button><button id="ax" aria-pressed="false">Ver o eixo hipotálamo → hipófise → glândula-alvo</button></div>
 <label id="m3opw" class="m3op">Transparência do corpo <input id="m3op" type="range" min="0" max="95" value="50" aria-label="Transparência do corpo"></label>
-<div class="stage"><canvas id="cv" aria-label="Modelo 3D do sistema endócrino"></canvas><svg id="ll" aria-hidden="true"></svg><div id="lbs"></div><p id="zh" class="zh" hidden>Use Ctrl + rolagem (ou pinça) para dar zoom</p>
+<div class="stage"><canvas id="cv" tabindex="0" role="img" aria-label="Modelo 3D do sistema endócrino. Com o foco aqui, as setas para os lados giram o corpo, as teclas + e − dão zoom e Esc recentraliza. Para escolher uma glândula, use os rótulos ou a lista em texto abaixo do modelo."></canvas><svg id="ll" aria-hidden="true"></svg><div id="lbs"></div><p id="zh" class="zh" hidden>Use Ctrl + rolagem (ou pinça) para dar zoom</p>
 <div id="axl" hidden aria-live="polite"></div><aside id="panel" aria-live="polite"><h3>Escolha uma glândula</h3><p>Clique ou toque em uma glândula para ver hormônios, funções e doenças relacionadas.</p></aside></div>
 <p id="m3st" aria-live="polite"></p>
 <p id="m3sx" class="m3note" hidden>O modelo anatômico é masculino; no modo feminino mudam apenas as gônadas.</p>
@@ -65,8 +68,9 @@
 <section id="glicemia" class="rv"><h2>Simulador de glicemia</h2>
 <p class="lead">Coma ou se exercite e veja glicose, insulina e glucagon reagirem. Unidades ilustrativas, sem valores clínicos.</p>
 <div class="bar"><button id="eat">🍞 Comer</button><button id="ex">🏃 Exercício</button></div>
-<canvas id="gc" width="800" height="260" aria-label="Gráfico de glicose, insulina e glucagon"></canvas>
-<p class="leg"><span style="color:#20e0ff">■ Glicose</span> <span style="color:#ff3df0">■ Insulina</span> <span style="color:#ffb020">■ Glucagon</span></p></section>
+<canvas id="gc" width="800" height="260" role="img" aria-label="Gráfico de glicose, insulina e glucagon ao longo do tempo. O texto abaixo do gráfico descreve o que está acontecendo."></canvas>
+<p class="leg"><span class="k-cy">■ Glicose</span> <span class="k-mg">■ Insulina</span> <span class="k-am">■ Glucagon</span></p>
+<p id="gs" class="gs" aria-live="polite"></p></section>
 
 <section id="microscopio" class="rv"><h2>Microscópio</h2>
 <p class="lead">Passe o mouse (ou arraste o dedo) sobre o tecido: a lupa revela as células. Desenhos ilustrativos.</p>
@@ -82,8 +86,8 @@
 <section id="habitos" class="rv"><h2>Hábitos que influenciam o sistema endócrino</h2><div id="hb" class="grid"></div></section>
 <section id="estresse" class="rv"><h2>Estresse: luta ou fuga</h2>
 <p class="lead">Diante de uma ameaça, as adrenais entram em ação: o coração acelera e o corpo se prepara para reagir. Role até aqui e veja o ritmo subir.</p>
-<canvas id="sc" aria-label="Animação: adrenais pulsam e enviam adrenalina e cortisol ao coração, que acelera"></canvas>
-<p class="leg"><span style="color:#ffb020">● Cortisol</span> <span style="color:#ff3df0">● Adrenalina</span> <span style="color:#ff3d6a">♥ Coração</span></p>
+<canvas id="sc" role="img" aria-label="Animação: adrenais pulsam e enviam adrenalina e cortisol ao coração, que acelera"></canvas>
+<p class="leg"><span class="k-am">● Cortisol</span> <span class="k-mg">● Adrenalina</span> <span class="k-rd">♥ Coração</span></p>
 <div class="grid"><article><h3>Adrenalina e noradrenalina</h3><p>São o alarme de incêndio: tocam em segundos. A medula das adrenais (parte interna) libera esses hormônios sob comando do <b>sistema nervoso simpático</b> (a parte dos nervos que prepara o corpo para agir). Eles aceleram o coração, aumentam a glicose disponível e levam mais sangue aos músculos.</p></article>
 <article><h3>Cortisol</h3><p>É o plano de longo prazo. O córtex das adrenais (parte externa) produz o cortisol, pelo eixo CRH → ACTH → cortisol. Ele age mais devagar e por mais tempo: ajuda a manter a glicose e regula a inflamação e a imunidade (defesa do corpo).</p></article>
 <article><h3>Quando o estresse não passa</h3><p>Um alarme que nunca desliga cansa o corpo. Com estresse prolongado, o cortisol alto por muito tempo pode afetar o sono, a pressão arterial e a glicose. Pausas, sono e exercício ajudam a regular essa resposta.</p></article></div></section>
@@ -106,7 +110,7 @@
 <p class="lead">Exemplo didático de um ciclo de cerca de 28 dias (a duração varia entre pessoas). Curvas qualitativas, sem valores de referência. Escolha um hormônio para destacar.</p>
 <div class="bar" id="cyb" role="group" aria-label="Destacar hormônio"><button data-h="all" class="on">Todos</button><button data-h="e">Estrogênio</button><button data-h="p">Progesterona</button><button data-h="lh">LH</button><button data-h="fsh">FSH</button></div>
 <div class="sim"><div class="tw"><svg id="cy" class="cyc" viewBox="0 0 700 300" style="min-width:560px;width:100%" role="img" aria-label="Curvas qualitativas de estrogênio, progesterona, LH e FSH ao longo das fases do ciclo menstrual"></svg></div></div>
-<p class="leg"><span style="color:#ff3df0">■ Estrogênio</span> <span style="color:#ffb020">■ Progesterona</span> <span style="color:#20e0ff">■ LH</span> <span style="color:#7aa2ff">■ FSH</span></p>
+<p class="leg"><span class="k-mg">■ Estrogênio</span> <span class="k-am">■ Progesterona</span> <span class="k-cy">■ LH</span> <span class="k-bl">■ FSH</span></p>
 <p id="cyt" aria-live="polite"></p></section>
 <section id="mitos" class="rv"><h2>Mitos × verdades</h2><p class="lead">Toque no card para virar e ver a resposta.</p><div id="mt" class="grid"></div></section>
 <section id="jogo" class="rv"><h2>Jogo: hormônio → glândula → função</h2><p class="lead">Arraste (mouse ou dedo) os cartões para os espaços de cada hormônio. Também funciona tocando no cartão e depois no espaço.</p><div id="jg"></div></section>

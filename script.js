@@ -1,4 +1,5 @@
-const $=s=>document.querySelector(s),RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const $=s=>document.querySelector(s),RMQ=matchMedia('(prefers-reduced-motion:reduce)');let RM=RMQ.matches;
+const onRM=f=>RMQ.addEventListener?RMQ.addEventListener('change',f):RMQ.addListener(f);onRM(e=>{RM=e.matches});
 // MOB = celular ou tela pequena; LOW = aparelho fraco (poucos núcleos, pouca memória ou economia de dados ligada)
 const MOB=matchMedia('(pointer:coarse)').matches||innerWidth<700,NC=navigator.hardwareConcurrency||4,NM=navigator.deviceMemory||4;
 const LOW=(MOB&&(NC<=4||NM<=2||innerWidth<420))||NC<=2||!!(navigator.connection&&navigator.connection.saveData);
@@ -110,32 +111,37 @@ function info(g){$('#panel').innerHTML=`<h3>${g.n}</h3><p class="pp"><b>Em pouca
 // título letra por letra
 // cada palavra fica num bloco que não quebra, para o título nunca se partir no meio de uma palavra
 const t=$('#t'),tt=t.textContent;let ci=0;t.innerHTML=tt.split(' ').map(w=>`<span class="w">${[...w].map(c=>`<span class="c" style="animation-delay:${(.6+(ci++)*.04).toFixed(2)}s">${c}</span>`).join('')}</span>`).join(' ');
-t.setAttribute('aria-label',tt);
+t.innerHTML=`<span class="sr">${tt}</span><span aria-hidden="true">${t.innerHTML}</span>`;
 // tema, cursor, progresso, reveal, menu
-$('#th').onclick=()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme=='dark'?'light':'dark'};
+const th=$('#th'),de=document.documentElement,thSync=()=>th.setAttribute('aria-pressed',de.dataset.theme=='light');thSync();
+th.onclick=()=>{de.dataset.theme=de.dataset.theme=='dark'?'light':'dark';thSync();try{localStorage.setItem('tema',de.dataset.theme)}catch(e){}};
+// botão "Pular abertura": termina a animação do título e leva ao conteúdo
+$('#skp').onclick=()=>{t.classList.add('done');const m=$('#modelo');m.scrollIntoView({behavior:RM?'auto':'smooth'});m.focus({preventScroll:true})};
 const cur=$('.cur');addEventListener('pointermove',e=>{cur.style.transform=`translate(${e.clientX-7}px,${e.clientY-7}px)`;cur.classList.toggle('big',!!e.target.closest('button,a,canvas'))});
 const hc=$('#hc');
 addEventListener('scroll',()=>{const f=scrollY/(document.body.scrollHeight-innerHeight);$('#lvl i').style.transform=`scaleY(${f})`;const h=Math.min(1,scrollY/innerHeight);hc.style.opacity=1-h;hc.style.transform=`scale(${1+h*.6})`},{passive:true});
 const io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('in')),{threshold:.12});document.querySelectorAll('.rv').forEach(s=>io.observe(s));
 const links=[...document.querySelectorAll('nav a')];
-new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&links.forEach(a=>a.classList.toggle('act',a.hash=='#'+e.target.id))),{threshold:.4}).observe&&document.querySelectorAll('main section[id]').forEach(s=>new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&links.forEach(a=>a.classList.toggle('act',a.hash=='#'+s.id))),{threshold:.35}).observe(s));
+const nav=$('nav'),navIO=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;links.forEach(a=>{const on=a.hash=='#'+e.target.id;a.classList.toggle('act',on);if(on){a.setAttribute('aria-current','location');nav.scrollTo({left:a.offsetLeft-nav.clientWidth/2+a.offsetWidth/2})}else a.removeAttribute('aria-current')})}),{rootMargin:'-45% 0px -50% 0px'});
+document.querySelectorAll('main section[id]').forEach(s=>navIO.observe(s));
 // partículas da abertura: silhueta do corpo
 (()=>{const c=hc,x=c.getContext('2d');let W,H,P=[],m={x:-999,y:-999};
 const inB=(u,v)=>{const dx=Math.abs(u);return(dx*dx+(v-.1)**2<.012)||(dx<.03&&v>.17&&v<.25)||(dx<.15&&v>.23&&v<.62)||(dx>.14&&dx<.2&&v>.25&&v<.7)||(dx<.14&&dx>.015&&v>.62&&v<1.05)};
 let lw=0;function rs(){if(innerWidth===lw&&P.length)return;lw=innerWidth;const d=DPR();W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);const S=H*.8,n=LOW?350:W<700?700:1300;P=[];while(P.length<n){const u=Math.random()-.5,v=Math.random()*1.05-.05;if(inB(u,v))P.push({hx:W/2+u*S,hy:H*.1+v*S,x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.6,k:Math.random()})}}
-rs();addEventListener('resize',rs);addEventListener('pointermove',e=>{m.x=e.clientX;m.y=e.clientY});
+rs();addEventListener('resize',()=>{rs();go()});addEventListener('pointermove',e=>{m.x=e.clientX;m.y=e.clientY});onRM(()=>go());
 // só anima enquanto a abertura está na tela e a aba está visível
 let run=0,vis=1;const go=()=>{if(!run&&vis&&!document.hidden){run=1;requestAnimationFrame(f)}};
 new IntersectionObserver(e=>{vis=e[0].isIntersecting;go()}).observe($('#hero'));document.addEventListener('visibilitychange',go);
-function f(t){if(!vis||document.hidden){run=0;return}{x.clearRect(0,0,W,H);P.forEach(p=>{const tx=p.hx+(RM?0:Math.sin(t/900+p.k*9)*3),ty=p.hy+(RM?0:Math.cos(t/800+p.k*9)*3);p.x+=(tx-p.x)*.04;p.y+=(ty-p.y)*.04;const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy);if(d<90){p.x+=dx/d*(90-d)*.2;p.y+=dy/d*(90-d)*.2}x.fillStyle=p.k<.5?'#20e0ff':p.k<.8?'#ff3df0':'#ffb020';x.globalAlpha=.8;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()})}requestAnimationFrame(f)}go()})();
+function f(t){if(!vis||document.hidden){run=0;return}{x.clearRect(0,0,W,H);P.forEach(p=>{const tx=p.hx+(RM?0:Math.sin(t/900+p.k*9)*3),ty=p.hy+(RM?0:Math.cos(t/800+p.k*9)*3);if(RM){p.x=tx;p.y=ty}else{p.x+=(tx-p.x)*.04;p.y+=(ty-p.y)*.04}const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy);if(!RM&&d<90){p.x+=dx/d*(90-d)*.2;p.y+=dy/d*(90-d)*.2}x.fillStyle=p.k<.5?'#20e0ff':p.k<.8?'#ff3df0':'#ffb020';x.globalAlpha=.8;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()})}if(RM){run=0;return}requestAnimationFrame(f)}go()})();
 // feedback negativo
 const t4=$('#t4');function fb(){const v=+t4.value,n=['#n1','#n2','#n3'].map($);n.forEach(e=>e.classList.remove('hot'));let s;if(v>66){n[2].classList.add('hot');s='T4 alto: hipotálamo e hipófise reduzem TRH e TSH; a tireoide desacelera.'}else if(v<34){n[0].classList.add('hot');n[1].classList.add('hot');s='T4 baixo: TRH e TSH aumentam e estimulam a tireoide a produzir mais T4.'}else s='T4 em equilíbrio: o sistema mantém produção estável.';$('#fbt').textContent=s}
 t4.oninput=fb;fb();
 // simulador de glicemia (unidades ilustrativas)
 (()=>{const c=$('#gc'),x=c.getContext('2d');let g=90,i=0,l=0,ca=0,ex=0,H=[],gv=0;new IntersectionObserver(e=>gv=e[0].isIntersecting).observe(c);
+const gs=$('#gs'),GS={alta:'Glicose acima do normal: o pâncreas libera insulina para baixá-la.',baixa:'Glicose abaixo do normal: o glucagon aumenta e libera glicose do estoque.',ok:'Glicose estável: insulina e glucagon em equilíbrio.'};let gst='';const gSay=k=>{if(k!=gst){gst=k;gs.textContent=GS[k]}};gSay('ok');
 $('#eat').onclick=()=>ca=Math.min(ca+70,140);$('#ex').onclick=()=>ex=240;
 // pausa quando o gráfico está fora da tela ou a aba está escondida
-setInterval(()=>{if(!gv||document.hidden)return;g+=ca*.03;ca*=.97;g-=i*.012+(ex>0?.25:0);ex--;g+=l*.01+(90-g)*.003;i+=(Math.max(0,g-90)*.9-i)*.06;l+=(Math.max(0,88-g)*4-l)*.06;H.push([g,i,l]);if(H.length>400)H.shift();
+setInterval(()=>{if(!gv||document.hidden)return;g+=ca*.03;ca*=.97;g-=i*.012+(ex>0?.25:0);ex--;g+=l*.01+(90-g)*.003;i+=(Math.max(0,g-90)*.9-i)*.06;l+=(Math.max(0,88-g)*4-l)*.06;H.push([g,i,l]);if(H.length>400)H.shift();gSay(g>97?'alta':g<85?'baixa':'ok');
 x.clearRect(0,0,800,260);[['#20e0ff',0,1],['#ff3df0',1,2],['#ffb020',2,3]].forEach(([col,k,sc])=>{x.strokeStyle=col;x.lineWidth=3;x.beginPath();H.forEach((p,j)=>{const y=Math.max(4,Math.min(256,260-(k?p[k]*2.2+10:(p[0]-40)*1.6)));j?x.lineTo(j*2,y):x.moveTo(0,y)});x.stroke()})},60)})();
 // quiz
 const Q=[['Hormônios chegam às células-alvo por qual via?',['Sangue','Ductos da pele','Nervos'],0,'Glândulas endócrinas lançam hormônios no sangue.'],
@@ -278,6 +284,11 @@ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pin.set(
 cv.addEventListener('pointermove',e=>{if(!pin.has(e.pointerId))return;pin.set(e.pointerId,e);if(pin.size==2){const a=[...pin.values()],d=Math.hypot(a[0].clientX-a[1].clientX,a[0].clientY-a[1].clientY);dist=Math.max(.35,Math.min(6,dist*pd/d));pd=d;drag=9;return}drag+=Math.abs(e.clientX-last);ry+=(e.clientX-last)*.01;last=e.clientX});
 cv.addEventListener('pointerup',e=>{pin.delete(e.pointerId);if(drag<6){const r=cv.getBoundingClientRect();mv.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mv,cam);const h=ray.intersectObjects(hits.filter(h=>h.parent.visible))[0];if(h)pick(h.object.userData.g)}});
 cv.addEventListener('pointercancel',e=>pin.delete(e.pointerId));
+// teclado (com o foco no modelo): setas giram, + e − dão zoom, Esc recentraliza
+cv.addEventListener('keydown',e=>{if(CAL&&calId)return;const k=e.key;
+ if(k=='ArrowLeft'||k=='ArrowRight'){e.preventDefault();ty=null;ry+=(k=='ArrowLeft'?-1:1)*.25}
+ else if(k=='+'||k=='='){e.preventDefault();dist=Math.max(.35,dist*.85)}else if(k=='-'||k=='_'){e.preventDefault();dist=Math.min(6,dist/.85)}
+ else if(k=='Escape'){reset()}});
 // rolagem comum rola a página; Ctrl (ou ⌘) + rolagem e a pinça do touchpad dão zoom
 const zh=$('#zh');let zt=0;
 cv.addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey)){if(zh){zh.hidden=false;clearTimeout(zt);zt=setTimeout(()=>zh.hidden=true,1800)}return}e.preventDefault();if(zh)zh.hidden=true;dist=Math.max(.35,Math.min(6,dist*(1+e.deltaY*.001)))},{passive:false});
@@ -352,8 +363,8 @@ mk('#mt',[
 ['Dormir bem influencia os hormônios.','Verdade','Sono afeta melatonina, GH, cortisol e o controle da glicose.'],
 ['Diabetes insipidus é o mesmo que diabetes mellitus.','Mito','São doenças diferentes: o insipidus envolve ADH e água, e o mellitus envolve insulina e glicose.'],
 ['Homens também produzem estrogênio.','Verdade','Em pequena quantidade, e mulheres produzem testosterona. Ambos têm os dois tipos de hormônio.']
-],d=>`<button class="fc" aria-pressed="false"><span><b>Mito ou verdade?</b>${d[0]}</span><span><b>${d[1]}!</b>${d[2]}</span></button>`);
-document.querySelectorAll('.fc').forEach(b=>b.onclick=()=>{b.classList.toggle('flip');b.setAttribute('aria-pressed',b.classList.contains('flip'))});
+],d=>`<button class="fc" aria-pressed="false"><span><b>Mito ou verdade?</b>${d[0]}</span><span aria-hidden="true"><b>${d[1]}!</b>${d[2]}</span></button>`);
+document.querySelectorAll('.fc').forEach(b=>b.onclick=()=>{const f=b.classList.toggle('flip');b.setAttribute('aria-pressed',f);b.children[0].setAttribute('aria-hidden',f);b.children[1].setAttribute('aria-hidden',!f)});
 const tio=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('in')),{threshold:.2});document.querySelectorAll('.tli').forEach(l=>tio.observe(l));
 // glossário
 const GL=[['Hormônio','Mensageiro químico produzido por glândulas e levado pelo sangue até as células-alvo.'],['Glândula endócrina','Libera hormônios direto no sangue, sem ductos.'],['Glândula exócrina','Libera secreções por ductos, como suor e saliva.'],['Célula-alvo','Célula que tem receptor para determinado hormônio.'],['Receptor','Proteína que reconhece e se liga a um hormônio específico.'],['Segundo mensageiro','Molécula dentro da célula, como o AMPc, que transmite o sinal do hormônio peptídico.'],['Feedback negativo','Mecanismo em que o efeito do hormônio reduz sua própria produção.'],['Feedback positivo','Mecanismo em que o efeito reforça o estímulo, como a ocitocina no parto.'],['Homeostase','Equilíbrio do meio interno do organismo.'],['Hipotálamo','Região do cérebro que liga o sistema nervoso ao endócrino e comanda a hipófise.'],['Hipófise','Glândula na base do cérebro, dividida em adeno-hipófise e neuro-hipófise.'],['Adeno-hipófise','Parte anterior da hipófise, que produz GH, TSH, ACTH, FSH, LH e prolactina.'],['Neuro-hipófise','Parte posterior da hipófise, que libera ADH e ocitocina produzidos no hipotálamo.'],['Glicemia','Concentração de glicose no sangue.'],['Insulina','Hormônio do pâncreas que ajuda as células a captar glicose.'],['Glucagon','Hormônio do pâncreas que eleva a glicose no sangue.'],['Cortisol','Hormônio esteroide das adrenais ligado à resposta ao estresse.'],['Ritmo circadiano','Ciclo biológico de cerca de 24 horas, como o do sono e vigília.'],['Autoimune','Condição em que o sistema imunológico ataca tecidos do próprio corpo.'],['Resistência à insulina','Resposta reduzida das células à ação da insulina.'],['Puberdade','Fase de amadurecimento sexual, iniciada por sinais hormonais.'],['Menopausa','Fim dos ciclos menstruais, com queda de estrogênio e progesterona.']].sort((a,b)=>a[0].localeCompare(b[0],'pt'));
@@ -373,13 +384,13 @@ Q.push(
 ['A doença de Addison é…',['Insuficiência das adrenais','Excesso de cortisol','Excesso de T4'],0,'As adrenais produzem pouco cortisol e, frequentemente, pouca aldosterona.']);
 const shuf=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
 Q.forEach(q=>q.ans=q[1][q[2]]);
-const _rq=rq;rq=function(){if(qi==0){Q.sort(()=>Math.random()-.5);Q.forEach(q=>{q[1]=shuf(q[1]);q[2]=q[1].indexOf(q.ans)})}_rq()};rq();
+const _rq=rq;rq=function(){if(qi==0){Q.sort(()=>Math.random()-.5);Q.forEach(q=>{q[1]=shuf(q[1]);q[2]=q[1].indexOf(q.ans)})}const a=document.activeElement,had=qi>0&&a&&(a===document.body||a.closest('#qz'));_rq();if(had&&document.querySelector('#qz .q, #qz h3')){const h=$('#qz h3');h.tabIndex=-1;h.focus({preventScroll:true})}};rq();
 // ===== jogo de arrastar =====
 (()=>{const D=[['Insulina','Pâncreas','Baixa a glicose no sangue'],['Cortisol','Adrenais','Ajuda na resposta ao estresse'],['T4 (tiroxina)','Tireoide','Controla o metabolismo'],['Melatonina','Pineal','Regula o ciclo sono-vigília'],['GH','Hipófise','Estimula o crescimento'],['PTH','Paratireoides','Eleva o cálcio no sangue']],root=$('#jg');let ok,er,sl;
 function build(){ok=er=0;sl=null;root.innerHTML=`<div>${D.map((d,i)=>`<div class="jr"><b>${d[0]}</b><span class="slot" data-t="g" data-h="${i}" tabindex="0" role="button" aria-label="Glândula de ${d[0]}">glândula</span><span class="slot" data-t="f" data-h="${i}" tabindex="0" role="button" aria-label="Função de ${d[0]}">função</span></div>`).join('')}</div><div class="pool" id="pool"></div><p id="js" aria-live="polite"></p><button id="jre" hidden>Jogar de novo</button>`;
 const p=$('#pool');shuf(D.flatMap((d,i)=>[['g',d[1],i],['f',d[2],i]])).forEach(([t,x,h])=>{const c=document.createElement('span');c.className='chip '+t;c.textContent=x;c.dataset.t=t;c.dataset.h=h;c.tabIndex=0;c.setAttribute('role','button');p.appendChild(c)});$('#jre').onclick=build;sc()}
 function sc(){$('#js').textContent=`Acertos: ${ok}/12 · Erros: ${er}`+(ok==12?' — Parabéns, você ligou tudo!':'');$('#jre').hidden=ok<12}
-function sel(c){if(sl)sl.classList.remove('sel');sl=c;c.classList.add('sel')}
+function sel(c){if(sl)sl.classList.remove('sel');sl=c;c.classList.add('sel');$('#js').textContent='Selecionado: '+c.textContent+'. Agora escolha o espaço de '+(c.dataset.t=='g'?'glândula':'função')+' certo.'}
 function drop(c,s){if(s.dataset.done||c.dataset.t!=s.dataset.t)return;if(c.dataset.h==s.dataset.h){s.textContent=c.textContent;s.classList.add('good');s.dataset.done=1;c.remove();ok++}else{er++;s.classList.add('bad');setTimeout(()=>s.classList.remove('bad'),600);c.classList.remove('sel')}sl=null;sc()}
 root.addEventListener('pointerdown',e=>{const c=e.target.closest('.chip');if(!c)return;c.setPointerCapture(e.pointerId);const x0=e.clientX,y0=e.clientY;let mv=0;
 c.onpointermove=ev=>{const dx=ev.clientX-x0,dy=ev.clientY-y0;if(Math.abs(dx)+Math.abs(dy)>6)mv=1;if(mv){c.style.transform=`translate(${dx}px,${dy}px)`;c.classList.add('drag')}};
@@ -449,7 +460,7 @@ const C=[['e','#ff3df0',[[0,.12],[3,.1],[7,.3],[11,.65],[13,.95],[14.5,.5],[18,.
 ['p','#ffb020',[[0,.08],[7,.06],[13,.08],[15,.25],[18,.6],[21,.95],[24,.7],[27,.15],[28,.1]]],
 ['lh','#20e0ff',[[0,.1],[8,.12],[12,.2],[12.8,.4],[13.5,1],[14.3,.4],[16,.14],[28,.1]]],
 ['fsh','#7aa2ff',[[0,.35],[4,.4],[8,.25],[12,.3],[13.5,.6],[15,.25],[20,.12],[26,.2],[28,.35]]]];
-sv.innerHTML=B.map(([n,a,b,c])=>`<rect x="${sx(a)}" y="20" width="${sx(b)-sx(a)}" height="240" fill="${c}" opacity=".09"/><text x="${(sx(a)+sx(b))/2}" y="38" text-anchor="middle" font-size="10.5" fill="${c}">${n}</text>`).join('')
+sv.innerHTML=B.map(([n,a,b,c])=>`<rect x="${sx(a)}" y="20" width="${sx(b)-sx(a)}" height="240" fill="${c}" opacity=".09"/><text x="${(sx(a)+sx(b))/2}" y="38" text-anchor="middle" font-size="10.5" class="bt" fill="${c}">${n}</text>`).join('')
 +`<path d="M50 20V260H670" fill="none" stroke="currentColor" stroke-opacity=".35"/><g fill="currentColor" font-size="11" text-anchor="middle">${[1,7,14,21,28].map(k=>`<text x="${sx(k-1)}" y="278">dia ${k}</text>`).join('')}<text x="360" y="296" font-size="10" fill-opacity=".7">dias do ciclo (exemplo) · altura = nível relativo</text></g>`
 +C.map(([k,c,p])=>`<path class="l ${k}" pathLength="1" stroke="${c}" d="${cr(p)}"/>`).join('');
 const T={all:'Todos juntos, como num revezamento: o FSH estimula os folículos (bolsinhas que guardam os óvulos), o estrogênio sobe, o pico de LH desencadeia a ovulação e, depois, a progesterona domina a fase lútea.',e:'Estrogênio, o construtor: espessa o endométrio (camada interna do útero). Cresce na fase folicular, atinge o pico perto da ovulação e tem um segundo aumento, menor, na fase lútea.',p:'Progesterona, a guardiã: prepara e mantém o endométrio. Sobe após a ovulação, produzida pelo corpo lúteo (o que sobra do folículo depois de soltar o óvulo). Se não há gravidez, ela cai e ocorre a menstruação.',lh:'LH, o gatilho: tem um pico (surto) pouco antes da ovulação, e esse pico faz o ovário liberar o óvulo.',fsh:'FSH, o que dá a largada: estimula o crescimento dos folículos no início do ciclo e tem um pequeno aumento junto com o LH no meio do ciclo.'};
