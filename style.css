@@ -12,6 +12,7 @@ button:hover,.btn:hover,button.on{background:var(--cy);color:#001018;box-shadow:
 :focus-visible{outline:3px solid var(--am);outline-offset:2px}
 #hero{max-width:none;height:100vh;height:100svh;padding:0;position:relative;display:grid;place-items:center;overflow:hidden}
 #hc{position:absolute;inset:0;width:100%;height:100%}.hero-t{position:relative;text-align:center;padding:0 6vw;max-width:900px;pointer-events:none}.hero-t a{pointer-events:auto;display:inline-block;text-decoration:none}
+.aviso{margin:18px auto 0;font-size:.85rem;color:var(--mu);text-shadow:0 0 12px var(--bg)}
 .eyebrow{color:var(--mg);letter-spacing:.3em;text-transform:uppercase;font-size:.8rem}
 h1{font-size:clamp(2rem,6.5vw,4.6rem);margin:.2em 0;text-shadow:0 0 30px #000}
 h1 .w{display:inline-block;white-space:nowrap}h1 .c{display:inline-block;opacity:0;transform:translateY(40px) rotate(8deg);animation:in .7s forwards}@keyframes in{to{opacity:1;transform:none}}

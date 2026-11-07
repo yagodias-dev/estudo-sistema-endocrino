@@ -50,12 +50,12 @@ const DEFAULTS = JSON.parse(JSON.stringify({ MODEL, GLAND_POSITIONS }));
 // ============================================================
 
 const G=[
-{id:'hip',n:'Hipotálamo',c:0xff3df0,h:'Hormônios liberadores (TRH, CRH, GnRH, GHRH); produz ADH e ocitocina',f:'Liga o sistema nervoso ao endócrino e comanda a hipófise.',d:'Diabetes insipidus (falta de ADH)'},
+{id:'hip',n:'Hipotálamo',c:0xff3df0,h:'Hormônios liberadores (TRH, CRH, GnRH, GHRH) e inibidores (somatostatina, dopamina); produz ADH e ocitocina',f:'Liga o sistema nervoso ao endócrino e comanda a hipófise.',d:'Diabetes insipidus central (falta de ADH; desde 2022 também chamado deficiência de arginina-vasopressina)'},
 {id:'hpf',n:'Hipófise',c:0xffb020,h:'GH, TSH, ACTH, FSH, LH, prolactina; libera ADH e ocitocina',f:'"Centro de comando": estimula tireoide, adrenais e gônadas e regula o crescimento.',d:'Acromegalia, nanismo hipofisário'},
 {id:'pin',n:'Pineal',c:0x7aa2ff,h:'Melatonina',f:'Regula o ritmo circadiano (sono e vigília).',d:'Alterações do ritmo do sono'},
 {id:'tir',n:'Tireoide',c:0x20e0ff,sx:1.6,h:'T3, T4, calcitonina',f:'Controla o metabolismo; a calcitonina reduz o cálcio no sangue.',d:'Hipotireoidismo, hipertireoidismo'},
 {id:'par',n:'Paratireoides',m:1,c:0x7dffb0,h:'PTH',f:'Eleva o cálcio no sangue.',d:'Hipo e hiperparatireoidismo'},
-{id:'tim',n:'Timo',c:0x9dff7a,h:'Hormônios tímicos',f:'Maturação dos linfócitos T, mais ativo na infância.',d:'Diminui com a idade (involução)'},
+{id:'tim',n:'Timo',c:0x9dff7a,h:'Hormônios tímicos',f:'Maturação dos linfócitos T, mais ativo na infância.',d:'Diminui naturalmente com a idade (involução)',dn:'Observação'},
 {id:'adr',n:'Adrenais (suprarrenais)',m:1,c:0xff6a3d,h:'Cortisol, aldosterona, adrenalina, noradrenalina',f:'Resposta ao estresse ("luta ou fuga"), sal e água, glicose.',d:'Síndrome de Cushing, doença de Addison'},
 {id:'pan',n:'Pâncreas endócrino',c:0xffe14a,sx:2.6,h:'Insulina, glucagon, somatostatina',f:'Regula a glicemia: insulina baixa, glucagon eleva.',d:'Diabetes tipo 1 e tipo 2'},
 {id:'ova',n:'Ovários',m:1,sex:'f',c:0xff7ac8,h:'Estrogênio, progesterona',f:'Puberdade feminina e ciclo menstrual.',d:'Síndrome dos ovários policísticos (SOP)'},
@@ -63,10 +63,10 @@ const G=[
 G.forEach(g=>{g.p=GLAND_POSITIONS[g.id].slice();g.s=GLAND_SIZE[g.id]});
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 // texto acessível + tabela
-$('#gl').innerHTML=G.map(g=>`<li><b>${g.n}</b>: ${g.h}. ${g.f} Doenças: ${g.d}.</li>`).join('');
+$('#gl').innerHTML=G.map(g=>`<li><b>${g.n}</b>: ${g.h}. ${g.f} ${g.dn||'Doenças'}: ${g.d}.</li>`).join('');
 const tb=$('#tb');tb.innerHTML=G.map(g=>`<tr><td>${g.n}</td><td>${g.h}</td><td>${g.f}</td><td>${g.d}</td></tr>`).join('');
 $('#q').oninput=e=>{const v=e.target.value.toLowerCase();[...tb.rows].forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(v))};
-function info(g){$('#panel').innerHTML=`<h3>${g.n}</h3><p><b>Hormônios:</b> ${g.h}</p><p><b>Função:</b> ${g.f}</p><p><b>Doenças:</b> ${g.d}</p>`}
+function info(g){$('#panel').innerHTML=`<h3>${g.n}</h3><p><b>Hormônios:</b> ${g.h}</p><p><b>Função:</b> ${g.f}</p><p><b>${g.dn||'Doenças'}:</b> ${g.d}</p>`}
 // título letra por letra
 // cada palavra fica num bloco que não quebra, para o título nunca se partir no meio de uma palavra
 const t=$('#t'),tt=t.textContent;let ci=0;t.innerHTML=tt.split(' ').map(w=>`<span class="w">${[...w].map(c=>`<span class="c" style="animation-delay:${(.6+(ci++)*.04).toFixed(2)}s">${c}</span>`).join('')}</span>`).join(' ');
@@ -285,7 +285,7 @@ mk('#dz',[
 ['Doença de Addison','Insuficiência das adrenais: falta de cortisol e, frequentemente, de aldosterona. Pode causar cansaço, perda de peso, pressão baixa e escurecimento da pele. Muitas vezes é autoimune.'],
 ['Acromegalia','Excesso de GH em adultos, geralmente por um tumor benigno da hipófise. Provoca crescimento de mãos, pés e ossos da face, pois os ossos longos já não crescem em comprimento.'],
 ['Nanismo hipofisário','Deficiência de GH na infância, que reduz o crescimento. Em geral as proporções do corpo são mantidas. O acompanhamento médico pode incluir reposição de GH.'],
-['Diabetes insipidus','Falta de ADH (ou resposta renal reduzida a ele): os rins perdem muita água, causando grande volume de urina diluída e muita sede. Apesar do nome parecido, não tem relação com a glicose do diabetes mellitus.'],
+['Diabetes insipidus','Falta de ADH (ou resposta renal reduzida a ele): os rins perdem muita água, causando grande volume de urina diluída e muita sede. Apesar do nome parecido, não tem relação com a glicose do diabetes mellitus. Em 2022, especialistas propuseram novos nomes para evitar essa confusão: deficiência de arginina-vasopressina (quando falta ADH; arginina-vasopressina é o outro nome do ADH) e resistência à arginina-vasopressina (quando os rins não respondem a ele).'],
 ['SOP (síndrome dos ovários policísticos)','Distúrbio hormonal comum em mulheres em idade reprodutiva. Pode envolver ciclos irregulares, excesso de hormônios masculinos (acne, pelos) e, em muitos casos, resistência à insulina. Diagnóstico e tratamento são individualizados.']
 ],d=>`<details><summary>${d[0]}</summary><p>${d[1]}</p></details>`);
 mk('#tl',[
@@ -371,7 +371,7 @@ x.fillStyle='#0a0f2a';x.fillRect(0,0,W,H);const ad=[[W*.14,H*.5],[W*.3,H*.5]];
 ad.forEach(([ax,ay])=>{x.fillStyle='#5a1f2a';x.beginPath();x.ellipse(ax,ay+34*k,24*k,34*k,0,0,7);x.fill();x.fillStyle='#ffb020';x.shadowColor='#ffb020';x.shadowBlur=MOB?0:8+14*b;x.beginPath();x.ellipse(ax,ay-6*k,(12+5*b)*k,(8+3*b)*k,0,0,7);x.fill();x.shadowBlur=0});
 sp+=dt*(.004+.022*it)*(MOB?.6:1);while(sp>1){sp--;if(P.length<(MOB?30:70)){const a=ad[Math.random()<.5?0:1],ky=Math.random()<.5;P.push({p:[a[0],a[1]-6*k,(a[0]+hx)/2,H*.06,hx,hy],u:0,v:ky?.011:.0035,c:ky?'#ff3df0':'#ffb020',r:ky?3:4.5})}}
 P=P.filter(q=>(q.u+=q.v*dt/16*(1+it*.8))<1);P.forEach(q=>{const a=1-q.u,px=a*a*q.p[0]+2*a*q.u*q.p[2]+q.u*q.u*q.p[4],py=a*a*q.p[1]+2*a*q.u*q.p[3]+q.u*q.u*q.p[5];x.fillStyle=q.c;x.beginPath();x.arc(px,py,q.r,0,7);x.fill()});
-heart(hx,hy,(2.1+.5*b)*k,'#ff3d6a');x.fillStyle='#cfd6ff';x.font=`${12}px Inter,sans-serif`;x.fillText('Adrenais',W*.14-6,H*.93);x.fillText('Coração',hx-24,H*.93);x.fillText(Math.round(fq*60)+' bpm (ilustrativo)',hx-52,H*.07)}
+heart(hx,hy,(2.1+.5*b)*k,'#ff3d6a');x.fillStyle='#cfd6ff';x.font=`${12}px Inter,sans-serif`;x.fillText('Adrenais',W*.14-6,H*.93);x.fillText('Coração',hx-24,H*.93);x.fillText('Ritmo: '+(it<.33?'calmo':it<.75?'acelerando':'acelerado'),hx-46,H*.07)}
 const mn=document.querySelector('main');
 if(RM){draw(0,16)}else loopOn(sec,draw,.35,v=>{act=v;mn.classList.toggle('shake',v);if(!v){it=0;P=[]}})})();
 // --- melatonina ---
@@ -430,7 +430,7 @@ P.forEach(([x,y])=>{const q=R();S.push({t:'c',k:q<.68?'be':q<.9?'al':'de',x,y,r:
 return S}
 const CD={str:'#5a2f6a',cap:'#b52a3d',rbc:'#e8505f',cel:'#c777b5',col:'#f6cfe0',nuc:'#4b1b6d',aci:'#9a6fb0',nuc2:'#3d1558',be:'#ff3df0',al:'#20e0ff',de:'#ffb020'},CL={str:'#4a2a58',cap:'#7a2a44',cel:'#8b5a96',col:'#d9a8c6',aci:'#8a64a0',be:'#a0509a',al:'#a0509a',de:'#a0509a'};
 const svg=(S,det)=>'<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice"><rect width="800" height="400" fill="'+(det?'#3a1d4d':'#2a1740')+'"/>'+S.map(s=>{const c=det?CD[s.k]:CL[s.k];if(!c)return'';if(s.t=='c')return`<circle cx="${s.x|0}" cy="${s.y|0}" r="${s.r}" fill="${c}"${s.k=='str'?' opacity=".4"':''}/>`;if(s.t=='e')return`<ellipse cx="${s.x|0}" cy="${s.y|0}" rx="${s.rx}" ry="${s.ry}" fill="${c}" transform="rotate(${s.rot|0} ${s.x|0} ${s.y|0})"/>`;return`<path d="${s.d}" fill="none" stroke="${c}" stroke-width="${det?8:10}" stroke-linecap="round"/>`}).join('')+'</svg>';
-const TX={tir:'Tireoide: folículos com colóide (reserva de hormônio tireoidiano) cercados por células foliculares. Os capilares vermelhos levam os hormônios ao sangue.',pan:'Ilhota pancreática: células beta (magenta, insulina, predominam), alfa (ciano, glucagon) e delta (âmbar, somatostatina). Ao redor, ácinos exócrinos (enzimas digestivas).'};
+const TX={tir:'Tireoide: folículos com coloide (reserva de hormônio tireoidiano) cercados por células foliculares. Os capilares vermelhos levam os hormônios ao sangue.',pan:'Ilhota pancreática: células beta (magenta, insulina, predominam), alfa (ciano, glucagon) e delta (âmbar, somatostatina). Ao redor, ácinos exócrinos (enzimas digestivas).'};
 function render(){const S=data(cur);low.innerHTML=svg(S,0);mz.innerHTML=svg(S,1);$('#mst').textContent=TX[cur]}
 function size(){W=ms.clientWidth;H=ms.clientHeight;r=W<560?58:85;lens.style.width=lens.style.height=2*r+'px';mz.style.width=W*Z+'px';mz.style.height=H*Z+'px';place(px||W/2,py||H/2)}
 function place(x,y){px=Math.max(0,Math.min(W,x));py=Math.max(0,Math.min(H,y));lens.style.transform=`translate3d(${px-r}px,${py-r}px,0)`;mz.style.transform=`translate3d(${r-px*Z}px,${r-py*Z}px,0)`}
