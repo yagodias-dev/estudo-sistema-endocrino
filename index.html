@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sistema Endócrino Humano — o corpo conversa em silêncio</title>
+<meta name="description" content="Site educativo sobre o sistema endócrino humano com modelo 3D interativo, simulador de glicemia e quiz.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="lvl" aria-hidden="true"><i></i></div><div class="cur" aria-hidden="true"></div><canvas id="nt" aria-hidden="true"></canvas>
+<header><nav aria-label="Principal"><b>Endócrino</b>
+<a href="#modelo">Modelo 3D</a><a href="#basico">Básico</a><a href="#acao">Ação</a><a href="#feedback">Feedback</a><a href="#glicemia">Glicemia</a><a href="#microscopio">Microscópio</a><a href="#tabela">Tabela</a><a href="#doencas">Doenças</a><a href="#vida">Vida</a><a href="#habitos">Hábitos</a><a href="#estresse">Estresse</a><a href="#cortisol">Cortisol</a><a href="#melatonina">Melatonina</a><a href="#ciclo">Ciclo</a><a href="#mitos">Mitos</a><a href="#jogo">Jogo</a><a href="#quiz">Quiz</a><a href="#glossario">Glossário</a>
+<button id="th" aria-label="Alternar modo claro e escuro">◐</button></nav></header>
+<main>
+<section id="hero"><canvas id="hc" aria-hidden="true"></canvas>
+<div class="hero-t"><p class="eyebrow">Sistema endócrino humano</p><h1 id="t">O sistema que conversa com o seu corpo em silêncio</h1>
+<p>Glândulas, hormônios e mensagens químicas que regulam crescimento, energia, sono, humor e reprodução.</p><a class="btn" href="#modelo">Entrar no corpo ↓</a></div></section>
+
+<section id="modelo"><h2>Modelo 3D interativo</h2>
+<p class="lead">Arraste para girar, use scroll ou pinça para zoom, toque numa glândula para voar até ela.</p>
+<div class="bar" role="group" aria-label="Controles do modelo">
+<button data-l="g">Só glândulas</button><button data-l="b" class="on">Corpo + glândulas</button><button data-l="v">+ Fluxo no sangue</button>
+<button id="sx">Corpo: feminino</button><button id="rs">Recentralizar</button><button id="ax" aria-pressed="false">Ver o eixo hipotálamo → hipófise → glândula-alvo</button></div>
+<div class="stage"><canvas id="cv" aria-label="Modelo 3D do sistema endócrino"></canvas><svg id="ll" aria-hidden="true"></svg><div id="lbs"></div>
+<div id="axl" hidden aria-live="polite"></div><aside id="panel" aria-live="polite"><h3>Escolha uma glândula</h3><p>Clique ou toque em uma glândula para ver hormônios, funções e doenças relacionadas.</p></aside></div>
+<p id="m3st" aria-live="polite"></p>
+<div id="cal" class="sim" hidden><h3>Modo calibração (?calibrar)</h3>
+<p>Escolha uma glândula (lista, rótulo ou clique no 3D). <b>Setas</b> movem X e Y; <b>Q / E</b> (ou PgDn / PgUp) movem Z (trás / frente). <b>Shift</b> = passo fino (0,001); <b>Ctrl</b> = passo grande (0,02); padrão 0,005. <b>Esc</b> solta a seleção e libera as setas para rolar a página.</p>
+<div class="bar"><label>Glândula <select id="calsel" aria-label="Glândula a calibrar"></select></label><button id="calf" type="button">Ver de frente</button><button id="calr" type="button">Girar modelo 180°</button><button id="calc" type="button">Copiar GLAND_POSITIONS</button></div>
+<p id="calm"></p><p id="calx"></p>
+<textarea id="calt" readonly rows="13" aria-label="Código GLAND_POSITIONS para copiar"></textarea></div>
+<details><summary>Lista em texto das glândulas (acessível)</summary><ul id="gl"></ul></details>
+</section>
+
+<section id="basico" class="rv"><h2>O que é o sistema endócrino</h2>
+<div class="grid">
+<article><h3>Endócrinas × exócrinas</h3><p>Glândulas <b>endócrinas</b> lançam hormônios direto no sangue, sem ductos. Glândulas <b>exócrinas</b> (suor, saliva) usam ductos para liberar secreções para fora do sangue.</p></article>
+<article><h3>Hormônios</h3><p>São mensageiros químicos. Viajam pelo sangue e atuam só em <b>células-alvo</b>, que têm o receptor certo (modelo chave-fechadura).</p></article>
+<article><h3>Nervoso × endócrino</h3><p>O controle nervoso é rápido e curto, como um reflexo. O endócrino é mais lento e dura mais, como crescimento e metabolismo.</p></article>
+<article><h3>Dois tipos de hormônio</h3><p><b>Peptídicos</b> (hidrossolúveis, como a insulina) ligam-se a receptores na membrana e ativam <i>segundos mensageiros</i> dentro da célula. <b>Esteroides</b> (lipossolúveis, como cortisol e estrogênio) atravessam a membrana e agem sobre os genes.</p></article></div></section>
+
+<section id="acao" class="rv"><canvas id="bl" aria-hidden="true"></canvas><h2>Como os hormônios agem</h2>
+<p class="lead">Hormônios circulam pelo corpo todo, mas só "conversam" com células que têm o receptor certo: as <b>células-alvo</b>. É como uma chave que só abre a fechadura correta (modelo chave-fechadura).</p>
+<div class="sim"><svg class="kl" viewBox="0 0 380 120" role="img" aria-label="Animação: o hormônio viaja, encaixa no receptor da célula-alvo e a ativa"><rect class="cell" x="240" y="6" width="134" height="108" rx="24"/><path d="M240 44h22l12 16-12 16h-22z" fill="#050816" stroke="#ff3df0" stroke-dasharray="3"/><g class="hm"><path d="M20 44h22l12 16-12 16h-22z" fill="#ff3df0"/></g><circle class="rg" cx="307" cy="60" r="20"/><circle class="rg r2" cx="307" cy="60" r="20"/><text x="8" y="112" fill="currentColor" font-size="11">hormônio no sangue → receptor → célula ativada</text></svg></div>
+<div class="grid" style="margin-top:18px">
+<article><h3>Células-alvo e receptores</h3><p>Receptor é uma proteína que reconhece um hormônio específico. Sem o receptor, a célula "não escuta" a mensagem, mesmo com o hormônio passando por perto. Por isso o mesmo hormônio no sangue gera efeitos só em certos tecidos.</p></article>
+<article><h3>Peptídicos (hidrossolúveis)</h3><p>Formados por aminoácidos, como insulina, glucagon, GH, ADH e ocitocina. Dissolvem-se no sangue, mas não atravessam a membrana: ligam-se a receptores na <b>superfície</b> da célula. Costumam agir rápido.</p></article>
+<article><h3>Esteroides (lipossolúveis)</h3><p>Derivados do colesterol, como cortisol, aldosterona, estrogênio, progesterona e testosterona. Atravessam a membrana, ligam-se a receptores <b>dentro</b> da célula e alteram a atividade de genes. Efeito mais lento e duradouro. Circulam no sangue ligados a proteínas transportadoras. Os hormônios da tireoide (T3 e T4) também agem em receptores no núcleo, embora não sejam esteroides.</p></article>
+<article><h3>Segundos mensageiros</h3><p>O hormônio peptídico é o "primeiro mensageiro": não entra na célula. Ao se ligar ao receptor, dispara dentro dela moléculas como o <b>AMPc</b> (o segundo mensageiro), que ativam enzimas em cascata. Assim, um único hormônio pode gerar uma resposta amplificada.</p></article></div></section>
+
+<section id="feedback" class="rv"><h2>Feedback: o termostato hormonal</h2>
+<p class="lead">No <b>feedback negativo</b>, o produto final freia a produção. Ex.: T4 alto reduz TSH; insulina baixa a glicose. No <b>feedback positivo</b>, o efeito reforça o estímulo: a ocitocina intensifica as contrações do parto, que liberam mais ocitocina.</p>
+<div class="sim"><label>Nível de T4 <input id="t4" type="range" min="0" max="100" value="50" aria-label="Nível de T4"></label>
+<div class="chain"><span id="n1">Hipotálamo (TRH)</span>→<span id="n2">Hipófise (TSH)</span>→<span id="n3">Tireoide (T4)</span></div><p id="fbt" aria-live="polite"></p></div>
+<div class="grid" style="margin-top:18px">
+<article><h3>Feedback negativo: tireoide</h3><p>O hipotálamo libera TRH, que estimula a hipófise a liberar TSH, que estimula a tireoide a produzir T4 e T3. Quando T4 sobe, hipotálamo e hipófise reduzem TRH e TSH. Quando T4 cai, o estímulo aumenta. É um termostato.</p></article>
+<article><h3>Feedback negativo: glicose</h3><p>Após comer, a glicose sobe e o pâncreas libera insulina, que ajuda as células a captar glicose. A glicose cai, e a liberação de insulina diminui. Se a glicose cai demais, o glucagon entra em ação.</p></article>
+<article><h3>Feedback positivo: ocitocina no parto</h3><p>A pressão do bebê sobre o colo do útero envia sinais ao hipotálamo, e a neuro-hipófise libera ocitocina. Ela intensifica as contrações, que aumentam a pressão e liberam ainda mais ocitocina, até o nascimento. O ciclo termina quando o estímulo cessa.</p></article>
+<article><h3>Por que importa?</h3><p>O feedback negativo mantém a <b>homeostase</b> (equilíbrio interno) e é o mais comum no corpo. O positivo é raro e leva um processo até a conclusão.</p></article></div></section>
+
+<section id="glicemia" class="rv"><h2>Simulador de glicemia</h2>
+<p class="lead">Coma ou se exercite e veja glicose, insulina e glucagon reagirem. Unidades ilustrativas, sem valores clínicos.</p>
+<div class="bar"><button id="eat">🍞 Comer</button><button id="ex">🏃 Exercício</button></div>
+<canvas id="gc" width="800" height="260" aria-label="Gráfico de glicose, insulina e glucagon"></canvas>
+<p class="leg"><span style="color:#20e0ff">■ Glicose</span> <span style="color:#ff3df0">■ Insulina</span> <span style="color:#ffb020">■ Glucagon</span></p></section>
+
+<section id="microscopio" class="rv"><h2>Microscópio</h2>
+<p class="lead">Passe o mouse (ou arraste o dedo) sobre o tecido: a lupa revela as células. Desenhos ilustrativos.</p>
+<div class="bar" id="msb" role="group" aria-label="Escolher tecido"><button data-s="tir" class="on">Tireoide</button><button data-s="pan">Pâncreas</button></div>
+<div id="ms" tabindex="0" role="img" aria-label="Tecido endócrino visto de longe, com uma lupa circular que revela as células. Use as setas do teclado para mover a lupa."><div id="mlow"></div><div id="lens"><div id="mz"></div></div></div>
+<p id="mst" class="leg" aria-live="polite"></p></section>
+<section id="tabela" class="rv"><h2>Tabela pesquisável</h2>
+<input id="q" type="search" placeholder="Buscar glândula, hormônio ou doença…" aria-label="Buscar na tabela">
+<div class="tw"><table><thead><tr><th>Glândula</th><th>Hormônios</th><th>Função</th><th>Distúrbios</th></tr></thead><tbody id="tb"></tbody></table></div></section>
+
+<section id="doencas" class="rv"><h2>Principais doenças e distúrbios</h2><p class="lead">Toque em cada card para expandir. Conteúdo educativo: diagnóstico e tratamento são sempre feitos por médico.</p><div id="dz" class="dz"></div></section>
+<section id="vida" class="rv"><h2>Hormônios ao longo da vida</h2><ol id="tl" class="tl"></ol></section>
+<section id="habitos" class="rv"><h2>Hábitos que influenciam o sistema endócrino</h2><div id="hb" class="grid"></div></section>
+<section id="estresse" class="rv"><h2>Estresse: luta ou fuga</h2>
+<p class="lead">Diante de uma ameaça, as adrenais entram em ação: o coração acelera e o corpo se prepara para reagir. Role até aqui e veja o ritmo subir.</p>
+<canvas id="sc" aria-label="Animação: adrenais pulsam e enviam adrenalina e cortisol ao coração, que acelera"></canvas>
+<p class="leg"><span style="color:#ffb020">● Cortisol</span> <span style="color:#ff3df0">● Adrenalina</span> <span style="color:#ff3d6a">♥ Coração</span></p>
+<div class="grid"><article><h3>Adrenalina e noradrenalina</h3><p>Liberadas pela medula das adrenais sob comando do sistema nervoso simpático. Agem em segundos: aceleram o coração, aumentam a glicose disponível e levam mais sangue aos músculos.</p></article>
+<article><h3>Cortisol</h3><p>Produzido pelo córtex das adrenais (eixo CRH → ACTH → cortisol). Age mais devagar e por mais tempo: ajuda a manter a glicose e modula a inflamação e a imunidade.</p></article>
+<article><h3>Quando o estresse não passa</h3><p>Se o estresse é prolongado, o cortisol elevado por muito tempo pode afetar sono, pressão arterial e glicose. Pausas, sono e exercício ajudam a regular a resposta.</p></article></div></section>
+<section id="cortisol" class="rv"><h2>Cortisol ao longo do dia</h2>
+<p class="lead">O cortisol segue o ritmo circadiano: costuma ser mais alto logo após o despertar, cai ao longo do dia e fica mais baixo à noite. Gráfico qualitativo, sem valores clínicos. Varia entre pessoas e com o horário de sono.</p>
+<div class="sim"><div class="tw"><svg id="cz" viewBox="0 0 640 280" style="min-width:480px;width:100%" role="img" aria-label="Curva qualitativa do cortisol: pico logo após acordar, queda ao longo do dia e nível baixo à noite"><defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#ffb020"/><stop offset=".5" stop-color="#ff3df0"/><stop offset="1" stop-color="#20e0ff"/></linearGradient><linearGradient id="ca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3df0" stop-opacity=".35"/><stop offset="1" stop-color="#ff3df0" stop-opacity="0"/></linearGradient></defs>
+<g stroke="currentColor" stroke-opacity=".35"><path d="M40 20V240H620" fill="none"/></g>
+<g fill="currentColor" font-size="12" text-anchor="middle"><text x="60" y="262">Despertar</text><text x="190" y="262">Manhã</text><text x="330" y="262">Tarde</text><text x="470" y="262">Noite</text><text x="585" y="262">Madrugada</text><text x="14" y="34" text-anchor="start" font-size="11">alto</text><text x="14" y="236" text-anchor="start" font-size="11">baixo</text></g>
+<path id="cza" d="M50 190C75 170 85 60 115 52C175 55 235 115 305 145C385 178 455 218 525 222C560 224 590 205 612 175L612 240L50 240Z" fill="url(#ca)" opacity="0"/>
+<path id="czl" d="M50 190C75 170 85 60 115 52C175 55 235 115 305 145C385 178 455 218 525 222C560 224 590 205 612 175" fill="none" stroke="url(#cg)" stroke-width="4" stroke-linecap="round"/>
+<circle id="czd" r="7" fill="#fff" style="filter:drop-shadow(0 0 8px #ff3df0)" opacity="0"/>
+<g fill="currentColor" font-size="12"><text x="130" y="44">pico logo após acordar</text><text x="270" y="118">cai ao longo do dia</text><text x="440" y="206">mais baixo à noite</text></g></svg></div>
+<button id="czr">↻ Redesenhar</button></div></section>
+<section id="melatonina" class="rv"><h2>Melatonina: a noite do corpo</h2>
+<p class="lead">Ao entrar aqui a tela escurece. À noite, com pouca luz, a <b>pineal</b>, pequena glândula no centro do cérebro, libera melatonina e sinaliza ao corpo que é hora de dormir.</p>
+<div class="grid"><article><svg class="hd" viewBox="0 0 200 200" role="img" aria-label="Cabeça de perfil com a pineal brilhando"><path d="M62 160C22 128 28 56 92 38c58-14 86 30 70 74-6 16-22 20-24 48z" fill="none" stroke="#7aa2ff" stroke-width="3"/><circle cx="108" cy="82" r="6" class="pn" fill="#7aa2ff"/><circle cx="96" cy="102" r="4" fill="#ffb020"/><text x="116" y="78" fill="#cfe0ff" font-size="11">pineal</text><text x="40" y="112" fill="#ffd9a0" font-size="10">hipófise</text></svg></article>
+<article><h3>Relógio de 24 horas</h3><p>O ritmo circadiano é um ciclo de cerca de 24 horas. O relógio principal fica no hipotálamo e recebe informação de luz pelos olhos.</p></article>
+<article><h3>Luz e sono</h3><p>Luz à noite, inclusive a de telas, pode reduzir a melatonina e atrasar o sono. Luz natural de dia e ambiente escuro para dormir ajudam o ritmo.</p></article></div></section>
+<section id="ciclo" class="rv"><h2>Ciclo menstrual: a coreografia hormonal</h2>
+<p class="lead">Exemplo didático de um ciclo de cerca de 28 dias (a duração varia entre pessoas). Curvas qualitativas, sem valores de referência. Escolha um hormônio para destacar.</p>
+<div class="bar" id="cyb" role="group" aria-label="Destacar hormônio"><button data-h="all" class="on">Todos</button><button data-h="e">Estrogênio</button><button data-h="p">Progesterona</button><button data-h="lh">LH</button><button data-h="fsh">FSH</button></div>
+<div class="sim"><div class="tw"><svg id="cy" class="cyc" viewBox="0 0 700 300" style="min-width:560px;width:100%" role="img" aria-label="Curvas qualitativas de estrogênio, progesterona, LH e FSH ao longo das fases do ciclo menstrual"></svg></div></div>
+<p class="leg"><span style="color:#ff3df0">■ Estrogênio</span> <span style="color:#ffb020">■ Progesterona</span> <span style="color:#20e0ff">■ LH</span> <span style="color:#7aa2ff">■ FSH</span></p>
+<p id="cyt" aria-live="polite"></p></section>
+<section id="mitos" class="rv"><h2>Mitos × verdades</h2><p class="lead">Toque no card para virar e ver a resposta.</p><div id="mt" class="grid"></div></section>
+<section id="jogo" class="rv"><h2>Jogo: hormônio → glândula → função</h2><p class="lead">Arraste (mouse ou dedo) os cartões para os espaços de cada hormônio. Também funciona tocando no cartão e depois no espaço.</p><div id="jg"></div></section>
+<section id="quiz" class="rv"><h2>Quiz</h2><div id="qz"></div></section>
+<section id="glossario" class="rv"><h2>Glossário</h2><input id="gq" type="search" placeholder="Buscar termo…" aria-label="Buscar no glossário"><dl id="gd"></dl></section>
+</main>
+<footer><p><b>Aviso:</b> site educativo. Não substitui orientação médica.</p>
+<p>Fontes de referência: livros de fisiologia humana (Guyton &amp; Hall; Costanzo), <a href="https://www.gov.br/saude" rel="noopener">Ministério da Saúde</a> e <a href="https://www.endocrino.org.br" rel="noopener">Sociedade Brasileira de Endocrinologia e Metabologia (SBEM)</a>.</p></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" defer></script>
+<script src="script.js"></script>
+</body></html>
