@@ -100,3 +100,6 @@ main.shake{animation:vib .09s linear infinite}@keyframes vib{25%{transform:trans
 #calt{width:100%;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--cd);color:var(--fg);border:1px solid #3a4780;border-radius:10px;padding:10px}
 @media(max-width:560px){#lbs button{font-size:.65rem;padding:2px 6px}#panel{max-height:42%}}
 
+/* ===== corpo 3D: slider de transparência e aviso do modelo masculino ===== */
+.m3op{display:flex;align-items:center;gap:10px;max-width:420px;margin:0 0 12px;color:var(--mu);font-size:.9rem}.m3op input{flex:1}
+.m3note{margin:4px 2px 0;font-size:.82rem;color:var(--mu);border-left:3px solid var(--mg);padding-left:8px}

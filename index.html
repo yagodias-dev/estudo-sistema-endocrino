@@ -22,13 +22,15 @@
 <p class="lead">Arraste para girar, use scroll ou pinça para zoom, toque numa glândula para voar até ela.</p>
 <div class="bar" role="group" aria-label="Controles do modelo">
 <button data-l="g">Só glândulas</button><button data-l="b" class="on">Corpo + glândulas</button><button data-l="v">+ Fluxo no sangue</button>
-<button id="sx">Corpo: feminino</button><button id="rs">Recentralizar</button><button id="ax" aria-pressed="false">Ver o eixo hipotálamo → hipófise → glândula-alvo</button></div>
+<button id="sx" aria-pressed="false">Gônadas: testículos</button><button id="rs">Recentralizar</button><button id="ax" aria-pressed="false">Ver o eixo hipotálamo → hipófise → glândula-alvo</button></div>
+<label id="m3opw" class="m3op">Transparência do corpo <input id="m3op" type="range" min="0" max="95" value="50" aria-label="Transparência do corpo"></label>
 <div class="stage"><canvas id="cv" aria-label="Modelo 3D do sistema endócrino"></canvas><svg id="ll" aria-hidden="true"></svg><div id="lbs"></div>
 <div id="axl" hidden aria-live="polite"></div><aside id="panel" aria-live="polite"><h3>Escolha uma glândula</h3><p>Clique ou toque em uma glândula para ver hormônios, funções e doenças relacionadas.</p></aside></div>
 <p id="m3st" aria-live="polite"></p>
+<p id="m3sx" class="m3note" hidden>O modelo anatômico é masculino; no modo feminino mudam apenas as gônadas.</p>
 <div id="cal" class="sim" hidden><h3>Modo calibração (?calibrar)</h3>
-<p>Escolha uma glândula (lista, rótulo ou clique no 3D). <b>Setas</b> movem X e Y; <b>Q / E</b> (ou PgDn / PgUp) movem Z (trás / frente). <b>Shift</b> = passo fino (0,001); <b>Ctrl</b> = passo grande (0,02); padrão 0,005. <b>Esc</b> solta a seleção e libera as setas para rolar a página.</p>
-<div class="bar"><label>Glândula <select id="calsel" aria-label="Glândula a calibrar"></select></label><button id="calf" type="button">Ver de frente</button><button id="calr" type="button">Girar modelo 180°</button><button id="calc" type="button">Copiar GLAND_POSITIONS</button></div>
+<p>Escolha uma glândula (lista, rótulo ou clique no 3D) ou <b>Modelo inteiro</b>. <b>Setas</b> movem X e Y; <b>Q / E</b> (ou PgDn / PgUp) movem Z (trás / frente). <b>Shift</b> = passo fino (0,001); <b>Ctrl</b> = passo grande (0,02); padrão 0,005. Com <b>Modelo inteiro</b>, <b>+ / −</b> mudam a escala. <b>Esc</b> solta a seleção e libera as setas para rolar a página.</p>
+<div class="bar"><label>Ajustar <select id="calsel" aria-label="Glândula ou modelo a calibrar"></select></label><button id="calf" type="button">Ver de frente</button><button id="calr" type="button">Girar modelo 180°</button><button id="calz" type="button">Restaurar padrão</button><button id="calc" type="button">Copiar MODEL e GLAND_POSITIONS</button></div>
 <p id="calm"></p><p id="calx"></p>
 <textarea id="calt" readonly rows="13" aria-label="Código GLAND_POSITIONS para copiar"></textarea></div>
 <details><summary>Lista em texto das glândulas (acessível)</summary><ul id="gl"></ul></details>
@@ -112,7 +114,8 @@
 <section id="glossario" class="rv"><h2>Glossário</h2><input id="gq" type="search" placeholder="Buscar termo…" aria-label="Buscar no glossário"><dl id="gd"></dl></section>
 </main>
 <footer><p><b>Aviso:</b> site educativo. Não substitui orientação médica.</p>
-<p>Fontes de referência: livros de fisiologia humana (Guyton &amp; Hall; Costanzo), <a href="https://www.gov.br/saude" rel="noopener">Ministério da Saúde</a> e <a href="https://www.endocrino.org.br" rel="noopener">Sociedade Brasileira de Endocrinologia e Metabologia (SBEM)</a>.</p></footer>
+<p>Fontes de referência: livros de fisiologia humana (Guyton &amp; Hall; Costanzo), <a href="https://www.gov.br/saude" rel="noopener">Ministério da Saúde</a> e <a href="https://www.endocrino.org.br" rel="noopener">Sociedade Brasileira de Endocrinologia e Metabologia (SBEM)</a>.</p>
+<p id="m3cr">Modelo 3D: <a href="https://sketchfab.com/3d-models/male-anatomy-study-8b6b4d5daad74da8bd821eef5a0a8511" target="_blank" rel="noopener">Male Anatomy Study</a>, por HEC, via Sketchfab.</p></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" defer></script>
 <script src="script.js"></script>

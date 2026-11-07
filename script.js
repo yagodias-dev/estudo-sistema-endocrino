@@ -2,39 +2,55 @@ const $=s=>document.querySelector(s),RM=matchMedia('(prefers-reduced-motion:redu
 // ============================================================
 // CONFIGURAÇÃO DO CORPO 3D — edite aqui
 // ============================================================
-// Modelo anatômico (GLB). Se o arquivo não existir, o site usa o corpo procedural.
-//  height = altura final do corpo em unidades 3D (pés em y=0, topo da cabeça em y=height)
-//  rotY   = giro em graus se o modelo não estiver de frente (0, 90, 180 ou 270)
-//  offset = ajuste fino [x, y, z], aplicado depois de centralizar
-const MODEL = { url: 'assets/corpo.glb', height: 1.8, rotY: 0, offset: [0, 0, 0] };
+// Modelo anatômico (GLB). Se o arquivo não existir ou falhar, o site usa o corpo procedural.
+//  height  = altura final do corpo em unidades 3D (pés em y=0, topo da cabeça em y=height)
+//  rotY    = giro em graus se o modelo não estiver de frente (0, 90, 180 ou 270)
+//  upright = true: se o modelo vier "deitado" (eixo Z para cima), ele é colocado de pé sozinho
+//  scale   = ajuste fino de tamanho depois de normalizar (1 = altura exata)
+//  offset  = ajuste fino [x, y, z] depois de centralizar
+//  opacity = opacidade inicial do corpo (0 = invisível, 1 = bem visível); o slider muda esse valor
+//  maxTris = acima disso, o status avisa que o modelo está pesado para celular
+//  prepass = true: mostra só a superfície mais próxima do corpo (evita camadas internas embolando o brilho)
+const MODEL = { url: 'assets/corpo.glb', height: 1.8, rotY: 0, upright: true, scale: 1, offset: [0, 0, 0], opacity: 0.5, maxTris: 250000, prepass: true };
+
+// Crédito do modelo (rodapé). Copie a licença exatamente como aparece na página do Sketchfab.
+//  license    = nome da licença, ex.: 'CC BY 4.0'  (vazio = o rodapé não mostra licença)
+//  licenseUrl = link da licença, ex.: 'https://creativecommons.org/licenses/by/4.0/deed.pt-br'
+const MODEL_CREDIT = { title: 'Male Anatomy Study', author: 'HEC', site: 'Sketchfab', url: 'https://sketchfab.com/3d-models/male-anatomy-study-8b6b4d5daad74da8bd821eef5a0a8511', license: '', licenseUrl: '' };
 
 // Aparência de holograma (cor, brilho do corpo, brilho das bordas)
 const HOLO_CFG = { color: 0x20e0ff, base: 0.12, rim: 0.5 };
 
-// Posições [x, y, z] das glândulas no sistema do corpo normalizado:
-//  x = lateral (centro = 0; glândulas pares usam x positivo e são espelhadas)
-//  y = altura (0 = sola do pé, 1.8 = topo da cabeça)
+// Posições [x, y, z] das glândulas no corpo normalizado, como FRAÇÃO da altura (atH multiplica por MODEL.height):
+//  x = lateral (centro = 0; positivo = lado esquerdo do corpo; glândulas pares são espelhadas)
+//  y = altura (0 = sola do pé, 1 = topo da cabeça)
 //  z = profundidade (positivo = frente do corpo)
-// Valores iniciais aproximados para um adulto com altura 1.8; ajuste com ?calibrar na URL.
+// Referência de proporção: cabeça ≈ 1/7,5 da altura, queixo ≈ 0,87, fúrcula do esterno ≈ 0,82, umbigo ≈ 0,60, púbis ≈ 0,48.
+// Valores iniciais aproximados; o modo ?calibrar gera números absolutos para colar aqui no lugar.
+const atH = (x, y, z) => [x * MODEL.height, y * MODEL.height, z * MODEL.height];
 const GLAND_POSITIONS = {
-  hip: [0, 1.668, 0.012],   // Hipotálamo: base do cérebro, logo acima da hipófise
-  hpf: [0, 1.645, 0.014],   // Hipófise: base do cérebro, na sela turca
-  pin: [0, 1.690, -0.042],  // Pineal: acima e atrás da hipófise
-  tir: [0, 1.500, 0.040],   // Tireoide: pescoço, abaixo da laringe
-  par: [0.018, 1.505, 0.026], // Paratireoides: atrás da tireoide (par)
-  tim: [0, 1.400, 0.058],   // Timo: atrás do esterno
-  adr: [0.050, 1.240, -0.052], // Adrenais: sobre os rins (par)
-  pan: [0, 1.170, -0.010],  // Pâncreas: atrás do estômago
-  ova: [0.055, 0.970, 0.005], // Ovários: pelve (par)
-  tes: [0.030, 0.800, 0.040]  // Testículos: bolsa escrotal (par)
+  hip: atH(0, 0.932, 0.004),      // Hipotálamo: base do cérebro, logo acima da hipófise
+  hpf: atH(0, 0.922, 0.008),      // Hipófise: na sela turca, base do crânio, atrás dos olhos
+  pin: atH(0, 0.940, -0.014),     // Pineal: acima e atrás da hipófise, no centro do cérebro
+  tir: atH(0, 0.833, 0.018),      // Tireoide: pescoço, abaixo da laringe, à frente da traqueia
+  par: atH(0.011, 0.834, 0.008),  // Paratireoides: atrás dos lobos da tireoide (par)
+  tim: atH(0, 0.776, 0.030),      // Timo: atrás do esterno, no alto do tórax
+  adr: atH(0.027, 0.668, -0.024), // Adrenais: em cima dos rins, perto das costas (par)
+  pan: atH(0.008, 0.640, -0.004), // Pâncreas: atrás do estômago, um pouco à esquerda
+  ova: atH(0.040, 0.530, 0.000),  // Ovários: na pelve, dos dois lados do útero (par)
+  tes: atH(0.012, 0.462, 0.028)   // Testículos: na bolsa escrotal, abaixo da pelve (par)
 };
-// Raio (em unidades 3D) de cada glândula
-const GLAND_SIZE = { hip: .014, hpf: .013, pin: .011, tir: .02, par: .008, tim: .035, adr: .026, pan: .028, ova: .02, tes: .02 };
+// Raio (em unidades 3D) de cada glândula — maiores para ficarem legíveis dentro de um corpo detalhado
+const GLAND_SIZE = { hip: .018, hpf: .017, pin: .014, tir: .026, par: .011, tim: .044, adr: .033, pan: .035, ova: .025, tes: .025 };
+// Brilho das glândulas: halo ao redor (0 = sem halo, 1 = forte)
+const GLAND_GLOW = 0.45;
 // Distância da câmera ao "voar" até cada glândula (menor = mais perto)
 const GLAND_FLY = { hip: .45, hpf: .45, pin: .45, tir: .6, par: .5, tim: .8, adr: .9, pan: .9, ova: .9, tes: .9 };
 // Lado do rótulo (l = esquerda, r = direita) e nome curto mostrado no rótulo
 const LABEL_SIDE = { hip: 'r', hpf: 'l', pin: 'l', tir: 'r', par: 'l', tim: 'r', adr: 'l', pan: 'r', ova: 'r', tes: 'r' };
 const LABEL_SHORT = { hip: 'Hipotál.', hpf: 'Hipófise', pin: 'Pineal', tir: 'Tireoide', par: 'Paratir.', tim: 'Timo', adr: 'Adrenais', pan: 'Pâncreas', ova: 'Ovários', tes: 'Testíc.' };
+// Cópia dos valores padrão (usada pelo botão "Restaurar padrão" do modo calibração)
+const DEFAULTS = JSON.parse(JSON.stringify({ MODEL, GLAND_POSITIONS }));
 // ============================================================
 
 const G=[
@@ -92,23 +108,36 @@ z.querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i
 // ===== modelo 3D (Three.js) + fallback SVG =====
 let sel=null;
 const stat=m=>{const e=$('#m3st');if(e)e.textContent=m};
-function fallback(){const cv=$('#cv'),st=cv.parentNode;cv.remove();$('.bar').hidden=false;stat('Modelo 3D indisponível neste dispositivo: mostrando uma versão simplificada.');
+// crédito do modelo 3D no rodapé (a licença só aparece depois de preenchida em MODEL_CREDIT)
+(()=>{const c=$('#m3cr');if(!c)return;const C=MODEL_CREDIT,a=(h,t)=>`<a href="${h}" target="_blank" rel="noopener">${t}</a>`;c.innerHTML=`Modelo 3D: ${a(C.url,C.title)}, por ${C.author}, via ${C.site}`+(C.license?`, licença ${C.licenseUrl?a(C.licenseUrl,C.license):C.license}`:'')+'.'})();
+function fallback(){const cv=$('#cv'),st=cv.parentNode;cv.remove();const ow=$('#m3opw');if(ow)ow.hidden=true;$('.bar').hidden=false;stat('Modelo 3D indisponível neste dispositivo: mostrando uma versão simplificada.');
 const sv=`<svg id="fb" viewBox="0 0 200 400" role="img" aria-label="Corpo humano com glândulas"><g fill="none" stroke="#20e0ff" stroke-width="2"><circle cx="100" cy="40" r="22"/><rect x="72" y="70" width="56" height="200" rx="22"/><rect x="40" y="75" width="20" height="170" rx="10"/><rect x="140" y="75" width="20" height="170" rx="10"/><rect x="76" y="270" width="22" height="115" rx="10"/><rect x="102" y="270" width="22" height="115" rx="10"/></g>${G.map(g=>[1,g.m?-1:1].filter((v,i,a)=>!(i&&!g.m)).map(s=>`<circle class="fg" data-id="${g.id}" cx="${100+g.p[0]*200*s}" cy="${380-g.p[1]*200}" r="${Math.max(5,g.s*110)}" fill="#${g.c.toString(16).padStart(6,'0')}" tabindex="0" role="button" aria-label="${g.n}"/>`).join('')).join('')}</svg>`;
 st.insertAdjacentHTML('afterbegin',sv);st.querySelectorAll('.fg').forEach(e=>{const go=()=>info(G.find(g=>g.id==e.dataset.id));e.onclick=go;e.onkeydown=k=>k.key=='Enter'&&go()})}
 addEventListener('load',()=>{try{if(!window.THREE)throw 0;init3D()}catch(e){console.error(e);fallback()}});
 function init3D(){
 const cv=$('#cv'),box=cv.parentNode,CAL=/[?&]calibrar(?:[=&#]|$)/.test(location.search);
-const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,MOB?1.5:1.75));
+// aparelho fraco: tela pequena ou poucos núcleos → sem antialias, pixel ratio 1 e shader simplificado
+const WEAK=(MOB&&(innerWidth<420||(navigator.hardwareConcurrency||4)<=4))||(navigator.hardwareConcurrency||8)<=2;
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:!WEAK,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,WEAK?1:MOB?1.5:1.75));R.autoClear=false;
 const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,1,.05,50),grp=new THREE.Group();sc.add(grp);
 const body=new THREE.Group(),gl=[],hits=[],GM={},v3=new THREE.Vector3();grp.add(body);
 
 // --- material holográfico (compartilhado por todo o corpo): brilho nas bordas (fresnel) + faixa de varredura ---
-const HM=new THREE.ShaderMaterial({uniforms:{uC:{value:new THREE.Color(HOLO_CFG.color)},uT:{value:0},uA:{value:HOLO_CFG.base},uR:{value:HOLO_CFG.rim}},
-transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
+//     uO = opacidade do corpo (slider "Transparência do corpo"); LITE = versão leve para aparelho fraco
+const HM=new THREE.ShaderMaterial({uniforms:{uC:{value:new THREE.Color(HOLO_CFG.color)},uT:{value:0},uA:{value:HOLO_CFG.base},uR:{value:HOLO_CFG.rim},uO:{value:MODEL.opacity*2}},
+defines:{LITE:WEAK?1:0},transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
 vertexShader:`varying vec3 vN;varying vec3 vV;varying float vH;
 void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);vH=(modelMatrix*vec4(position,1.0)).y;gl_Position=projectionMatrix*mv;}`,
-fragmentShader:`uniform vec3 uC;uniform float uT;uniform float uA;uniform float uR;varying vec3 vN;varying vec3 vV;varying float vH;
-void main(){float f=pow(1.0-abs(dot(normalize(vN),normalize(vV))),2.4);float s=smoothstep(0.78,1.0,0.5+0.5*sin(vH*70.0-uT*1.6))*0.16;float a=uA+f*uR+s;gl_FragColor=vec4(uC*(0.8+f*1.3),a);}`});
+fragmentShader:`uniform vec3 uC;uniform float uT;uniform float uA;uniform float uR;uniform float uO;varying vec3 vN;varying vec3 vV;varying float vH;
+void main(){float d=1.0-abs(dot(normalize(vN),normalize(vV)));
+#if LITE
+float f=d*d;float s=0.0;
+#else
+float f=pow(d,2.4);float s=smoothstep(0.78,1.0,0.5+0.5*sin(vH*70.0-uT*1.6))*0.16;
+#endif
+float a=(uA+f*uR+s)*uO;gl_FragColor=vec4(uC*(0.8+f*1.3),a);}`});
+// pré-passo de profundidade: grava só a profundidade da superfície mais próxima, sem cor
+const DM=new THREE.MeshBasicMaterial({colorWrite:false,side:THREE.DoubleSide});
 
 // --- corpo procedural (plano B / enquanto o GLB carrega): proporções de um adulto com altura 1.8 ---
 const lathe=(pts,seg)=>new THREE.LatheGeometry(new THREE.SplineCurve(pts.map(p=>new THREE.Vector2(p[0],p[1]))).getPoints(pts.length*6).map(p=>new THREE.Vector2(Math.max(0,p.x),p.y)),seg||28);
@@ -127,25 +156,50 @@ mesh(lathe([[0,-.1175],[.02,-.113],[.042,-.095],[.062,-.06],[.074,-.015],[.0775,
  ball([s*.088,.9,0],.08);limb([s*.088,.9,0],[s*.09,.5,.01],.078,.05);ball([s*.09,.5,.01],.05);limb([s*.09,.5,.01],[s*.08,.075,-.005],.05,.028);ball([s*.08,.075,-.005],.03);ball([s*.085,.03,.07],1,.045,.03,.12)});
 return g}
 // plataforma sob os pés
-const rg=new THREE.Mesh(new THREE.RingGeometry(.3,.315,64),new THREE.MeshBasicMaterial({color:0x20e0ff,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));rg.rotation.x=-Math.PI/2;rg.position.y=.002;body.add(rg);
+const rg=new THREE.Mesh(new THREE.RingGeometry(.3,.315,64),new THREE.MeshBasicMaterial({color:0x20e0ff,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));rg.rotation.x=-Math.PI/2;rg.position.y=.002;rg.layers.set(1);body.add(rg);
 
 // --- modelo GLB: normaliza escala/posição e aplica o material holográfico ---
-let cur=null,srcScene=null,kind='procedural',tris=0;
+let cur=null,srcScene=null,kind='procedural',tris=0,adj=null;
 const disp=o=>o.traverse(c=>{c.geometry&&c.geometry.dispose()});
-function setModel(node,k,t){if(cur){body.remove(cur);if(cur.userData.proc)disp(cur)}cur=node;kind=k;tris=t||0;body.add(node);calInfo()}
-function fitModel(src){src.updateMatrixWorld(true);const wrap=new THREE.Group();let n=0;
- src.traverse(o=>{if(!o.isMesh||!o.geometry)return;const geo=o.geometry;if(!geo.attributes.normal)geo.computeVertexNormals();const m=new THREE.Mesh(geo,HM);o.matrixWorld.decompose(m.position,m.quaternion,m.scale);m.renderOrder=1;wrap.add(m);n+=(geo.index?geo.index.count:geo.attributes.position.count)/3});
- if(!wrap.children.length)throw new Error('GLB sem malhas');
- wrap.rotation.y=MODEL.rotY*Math.PI/180;const fit=new THREE.Group();fit.add(wrap);fit.updateMatrixWorld(true);
- const bx=new THREE.Box3().setFromObject(fit),sz=bx.getSize(new THREE.Vector3()),ct=bx.getCenter(new THREE.Vector3()),s=MODEL.height/sz.y;
- fit.scale.setScalar(s);fit.position.set(-ct.x*s+MODEL.offset[0],-bx.min.y*s+MODEL.offset[1],-ct.z*s+MODEL.offset[2]);return{fit,tris:n}}
-function loadModel(){if(!THREE.GLTFLoader){stat('Carregador de modelos indisponível: usando o corpo procedural.');return}
- stat('Carregando modelo anatômico…');
- new THREE.GLTFLoader().load(MODEL.url,gltf=>{try{srcScene=gltf.scene;const r=fitModel(srcScene);setModel(r.fit,'GLB',r.tris);stat('Modelo anatômico carregado.'+(MOB&&r.tris>250000?' Aviso: modelo pesado para celular.':''))}catch(e){console.warn(e);stat('Não foi possível usar o GLB: mostrando o corpo procedural.')}},undefined,e=>{console.info('GLB não carregado:',e);stat('Modelo '+MODEL.url+' não encontrado: mostrando o corpo procedural.')})}
+// o corpo fica na camada 1 (desenhada primeiro); glândulas, rótulos e fluxos ficam na camada 0, sempre visíveis por cima
+function setModel(node,k,t){if(cur){body.remove(cur);if(cur.userData.proc)disp(cur)}cur=node;kind=k;tris=t||0;node.traverse(o=>o.layers.set(1));body.add(node);sexNote();calInfo()}
+// ajuste fino do usuário (MODEL.scale e MODEL.offset), aplicado por fora da normalização
+function applyAdj(){if(!adj)return;adj.scale.setScalar(MODEL.scale);adj.position.fromArray(MODEL.offset)}
+const isGround=o=>/(^|[^a-z])(ground|floor|plane|backdrop|shadow|chao|piso)([^a-z]|$)/i.test(o.name||'');
+function fitModel(src){src.updateMatrixWorld(true);const up=new THREE.Group(),parts=[];let n=0;
+ src.traverse(o=>{if(!o.isMesh||!o.geometry||o.visible===false||isGround(o))return;const geo=o.geometry;
+  // ignora texturas/cores do modelo: só o material holográfico é usado
+  ['uv','uv2','color','tangent'].forEach(k=>{if(geo.attributes[k])geo.deleteAttribute(k)});
+  (Array.isArray(o.material)?o.material:[o.material]).forEach(mt=>{if(!mt)return;for(const k in mt){const v=mt[k];if(v&&v.isTexture)v.dispose()}mt.dispose()});
+  if(!geo.attributes.normal)geo.computeVertexNormals();
+  const m=new THREE.Mesh(geo,HM);o.matrixWorld.decompose(m.position,m.quaternion,m.scale);m.renderOrder=1;up.add(m);
+  const t=(geo.index?geo.index.count:geo.attributes.position.count)/3;parts.push({m,t});n+=t});
+ if(!parts.length)throw new Error('GLB sem malhas');
+ // descarta peças achatadas e largas (chão ou fundo exportados junto com o corpo)
+ const box=o=>new THREE.Box3().setFromObject(o),all=box(up),as=all.getSize(new THREE.Vector3()),tall=Math.max(as.x,as.y,as.z);
+ parts.forEach(p=>{const s=box(p.m).getSize(new THREE.Vector3()),mn=Math.min(s.x,s.y,s.z),mx=Math.max(s.x,s.y,s.z);if(parts.length>1&&mn<tall*.01&&mx>tall*.5){up.remove(p.m);n-=p.t}});
+ // de pé: se a maior medida for a profundidade (Z), o modelo veio deitado (exportado com Z para cima)
+ const sz0=box(up).getSize(new THREE.Vector3());up.rotation.x=MODEL.upright&&sz0.z>sz0.y*1.15&&sz0.z>=sz0.x?-Math.PI/2:0;
+ if(MODEL.upright&&!up.rotation.x&&sz0.x>sz0.y*1.6){up.rotation.z=Math.PI/2}
+ // pré-passo de profundidade (uma cópia sem cor de cada malha, desenhada antes)
+ if(MODEL.prepass)up.children.slice().forEach(m=>{const d=new THREE.Mesh(m.geometry,DM);d.position.copy(m.position);d.quaternion.copy(m.quaternion);d.scale.copy(m.scale);d.renderOrder=0;up.add(d)});
+ const wrap=new THREE.Group();wrap.add(up);wrap.rotation.y=MODEL.rotY*Math.PI/180;
+ const fit=new THREE.Group();fit.add(wrap);fit.updateMatrixWorld(true);
+ // altura padronizada, pés em y=0, centralizado em x e z
+ const bx=box(fit),sz=bx.getSize(new THREE.Vector3()),ct=bx.getCenter(new THREE.Vector3()),s=MODEL.height/sz.y;
+ fit.scale.setScalar(s);fit.position.set(-ct.x*s,-bx.min.y*s,-ct.z*s);
+ adj=new THREE.Group();adj.add(fit);applyAdj();return{fit:adj,tris:Math.round(n)}}
+const kTri=n=>(n>=1e6?(n/1e6).toFixed(1).replace('.',',')+' milhões':Math.round(n/1000)+' mil')+' triângulos';
+function triMsg(n){return 'Modelo anatômico carregado · '+kTri(n)+'.'+(n>MODEL.maxTris?' Atenção: passa de '+kTri(MODEL.maxTris)+' e pode ficar lento no celular. Reduza o modelo (decimate) se travar.':'')}
+function loadModel(){if(!THREE.GLTFLoader){stat('Carregador de modelos indisponível: mostrando o corpo simplificado.');return}
+ stat('Carregando modelo…');
+ new THREE.GLTFLoader().load(MODEL.url,gltf=>{try{srcScene=gltf.scene;const r=fitModel(srcScene);setModel(r.fit,'GLB',r.tris);stat(triMsg(r.tris))}catch(e){console.warn(e);stat('O arquivo '+MODEL.url+' foi baixado, mas não pôde ser usado. Mostrando o corpo simplificado.')}},
+  x=>{if(x&&x.lengthComputable&&x.total)stat('Carregando modelo… '+Math.round(x.loaded/x.total*100)+'%')},
+  e=>{console.info('GLB não carregado:',e);stat('Modelo '+MODEL.url+' não encontrado ou com erro: mostrando o corpo simplificado.')})}
 setModel(procBody(),'procedural');
 
 // --- glândulas (posições vêm de GLAND_POSITIONS) ---
-G.forEach(g=>{(g.m?[1,-1]:[1]).forEach(s=>{const mt=new THREE.MeshBasicMaterial({color:g.c,transparent:true});const m=new THREE.Mesh(new THREE.SphereGeometry(g.s,20,16),mt);m.scale.x=g.sx||1;m.position.set(g.p[0]*s,g.p[1],g.p[2]);m.renderOrder=3;m.userData={g,mt,s};
+G.forEach(g=>{(g.m?[1,-1]:[1]).forEach(s=>{const mt=new THREE.MeshBasicMaterial({color:g.c,transparent:true});const m=new THREE.Mesh(new THREE.SphereGeometry(g.s,20,16),mt);m.scale.x=g.sx||1;m.position.set(g.p[0]*s,g.p[1],g.p[2]);m.renderOrder=3;const hm=new THREE.MeshBasicMaterial({color:g.c,transparent:true,opacity:GLAND_GLOW,blending:THREE.AdditiveBlending,depthWrite:false});const halo=new THREE.Mesh(new THREE.SphereGeometry(g.s*1.6,16,12),hm);halo.renderOrder=2;m.add(halo);m.userData={g,mt,s,hm};
  const h=new THREE.Mesh(new THREE.SphereGeometry(Math.max(g.s*1.7,.028),8,6),new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false}));h.userData.g=g;m.add(h);hits.push(h);
  grp.add(m);gl.push(m);if(s==1)GM[g.id]=m})});
 
@@ -173,13 +227,17 @@ function layout(){const cols={l:[],r:[]};
 const N=160,pg=new THREE.BufferGeometry(),pa=new Float32Array(N*3),BY0=.55,BY1=1.6;for(let i=0;i<N;i++){pa[i*3]=(Math.random()-.5)*.06;pa[i*3+1]=BY0+Math.random()*(BY1-BY0);pa[i*3+2]=(Math.random()-.5)*.04}
 pg.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(pg,new THREE.PointsMaterial({color:0xff3d6a,size:.022,blending:THREE.AdditiveBlending,transparent:true}));pts.visible=false;grp.add(pts);
 
-let sex='f',tgt=new THREE.Vector3(0,.9,0),dist=3.5,ry=0,ty=null,drag=0,last=null,visible=true,pin=new Map(),pd=0;
+let sex='m',tgt=new THREE.Vector3(0,.9,0),dist=3.5,ry=0,ty=null,drag=0,last=null,visible=true,pin=new Map(),pd=0;
 const view=()=>{const w=box.clientWidth,h=box.clientHeight;W=w;H=h;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();for(const k in LBL)LBL[k].w=0};view();addEventListener('resize',view);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{for(const k in LBL)LBL[k].w=0});
-function setSex(){gl.forEach(m=>{const s=m.userData.g.sex;m.visible=!s||s==sex})}setSex();
+function setSex(){gl.forEach(m=>{const s=m.userData.g.sex;m.visible=!s||s==sex});sexNote()}
+// o modelo anatômico é masculino: no modo feminino mudam só as gônadas
+function sexNote(){const n=$('#m3sx');if(n)n.hidden=!(kind=='GLB'&&sex=='f')}setSex();
 function pick(g){sel=g;info(g);ty=0;ry=ry%(Math.PI*2);if(ry>Math.PI)ry-=Math.PI*2;tgt.set(g.p[0],g.p[1],g.p[2]);dist=GLAND_FLY[g.id]||.9;if(CAL)calSync(g.id)}
 function reset(){sel=null;tgt.set(0,.9,0);dist=3.5}
-$('#rs').onclick=reset;$('#sx').onclick=e=>{sex=sex=='f'?'m':'f';e.target.textContent='Corpo: '+(sex=='f'?'feminino':'masculino');setSex()};
+$('#rs').onclick=reset;$('#sx').onclick=e=>{sex=sex=='f'?'m':'f';e.target.textContent='Gônadas: '+(sex=='f'?'ovários':'testículos');e.target.setAttribute('aria-pressed',sex=='f');setSex()};
+// slider "Transparência do corpo": 0 = mais visível, 95 = quase invisível
+const op=$('#m3op');function opSet(){MODEL.opacity=1-op.value/100;HM.uniforms.uO.value=MODEL.opacity*2;op.setAttribute('aria-valuetext',op.value+'% transparente')}if(op){op.value=Math.round((1-MODEL.opacity)*100);opSet();op.oninput=()=>{opSet();calOut()}}
 document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-l]').forEach(x=>x.classList.remove('on'));b.classList.add('on');body.visible=b.dataset.l!='g';pts.visible=b.dataset.l=='v'});
 window.__E3={grp,gl,reset,getSex:()=>sex};const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pin.set(e.pointerId,e);drag=0;last=e.clientX;ty=null;if(pin.size==2){const a=[...pin.values()];pd=Math.hypot(a[0].clientX-a[1].clientX,a[0].clientY-a[1].clientY)}});
@@ -191,30 +249,40 @@ new IntersectionObserver(e=>visible=e[0].isIntersecting).observe(box);
 
 // --- modo calibração (?calibrar) ---
 let calId=null;
-function calOut(){if(!CAL)return;const g=G.find(x=>x.id==calId);$('#calx').textContent=g?`${g.n}: x ${g.p[0].toFixed(3)} · y ${g.p[1].toFixed(3)} · z ${g.p[2].toFixed(3)}`:'Nenhuma glândula selecionada (use a lista, um rótulo ou clique no 3D).';
- $('#calt').value='const GLAND_POSITIONS = {\n'+G.map(x=>`  ${x.id}: [${x.p.map(v=>v.toFixed(3)).join(', ')}],   // ${x.n}`).join('\n')+'\n};\n// MODEL.rotY = '+MODEL.rotY+';'}
-function calInfo(){if(!CAL)return;$('#calm').textContent=`Corpo atual: ${kind}${tris?' · '+Math.round(tris/1000)+'k triângulos':''} · altura ${MODEL.height} · rotY ${MODEL.rotY}°`}
+function f4(v){return +(+v).toFixed(4)}
+function calOut(){if(!CAL)return;const g=G.find(x=>x.id==calId);
+ $('#calx').textContent=calId=='model'?`Modelo inteiro: escala ${f4(MODEL.scale)} · deslocamento x ${f4(MODEL.offset[0])} · y ${f4(MODEL.offset[1])} · z ${f4(MODEL.offset[2])} · giro ${MODEL.rotY}°`:g?`${g.n}: x ${g.p[0].toFixed(3)} · y ${g.p[1].toFixed(3)} · z ${g.p[2].toFixed(3)}`:'Nenhuma glândula selecionada (use a lista, um rótulo ou clique no 3D).';
+ $('#calt').value=`// Cole no topo do script.js, substituindo as linhas "const MODEL = ..." e "const GLAND_POSITIONS = {...};"\nconst MODEL = { url: '${MODEL.url}', height: ${MODEL.height}, rotY: ${MODEL.rotY}, upright: ${MODEL.upright}, scale: ${f4(MODEL.scale)}, offset: [${MODEL.offset.map(f4).join(', ')}], opacity: ${f4(MODEL.opacity)}, maxTris: ${MODEL.maxTris}, prepass: ${MODEL.prepass} };\n\nconst GLAND_POSITIONS = {\n`+G.map(x=>`  ${x.id}: [${x.p.map(v=>v.toFixed(3)).join(', ')}],   // ${x.n}`).join('\n').replace(/,(\s+\/\/[^\n]*)$/,'$1')+'\n};'}
+function calInfo(){if(!CAL)return;$('#calm').textContent=`Corpo atual: ${kind=='GLB'?'modelo anatômico (GLB)':'corpo simplificado (procedural)'}${tris?' · '+kTri(tris):''} · altura ${MODEL.height} · giro ${MODEL.rotY}° · escala ${f4(MODEL.scale)}`}
 function calSync(id){calId=id;$('#calsel').value=id;calOut()}
-function calMove(d){const g=G.find(x=>x.id==calId);if(!g)return;g.p=g.p.map((v,i)=>+(v+d[i]).toFixed(4));gl.forEach(m=>{if(m.userData.g===g)m.position.set(g.p[0]*m.userData.s,g.p[1],g.p[2])});tgt.set(g.p[0],g.p[1],g.p[2]);calOut()}
-if(CAL){$('#cal').hidden=false;const cs=$('#calsel');cs.innerHTML=G.map(g=>`<option value="${g.id}">${g.n}</option>`).join('');cs.value='';
- cs.onchange=()=>{const g=G.find(x=>x.id==cs.value);if(g)pick(g)};
+function placeG(g){gl.forEach(m=>{if(m.userData.g===g)m.position.set(g.p[0]*m.userData.s,g.p[1],g.p[2])})}
+function refit(){if(srcScene){const r=fitModel(srcScene);setModel(r.fit,'GLB',r.tris)}else calInfo()}
+function calMove(d){if(calId=='model'){MODEL.offset=MODEL.offset.map((v,i)=>f4(v+d[i]));applyAdj();calInfo();calOut();return}
+ const g=G.find(x=>x.id==calId);if(!g)return;g.p=g.p.map((v,i)=>+(v+d[i]).toFixed(4));placeG(g);tgt.set(g.p[0],g.p[1],g.p[2]);calOut()}
+if(CAL){$('#cal').hidden=false;const cs=$('#calsel');cs.innerHTML='<option value="model">Modelo inteiro (posição e escala)</option>'+G.map(g=>`<option value="${g.id}">${g.n}</option>`).join('');cs.value='';
+ cs.onchange=()=>{if(cs.value=='model'){calSync('model');reset();return}const g=G.find(x=>x.id==cs.value);if(g)pick(g)};
  $('#calf').onclick=()=>{ty=0};
- $('#calr').onclick=()=>{MODEL.rotY=(MODEL.rotY+180)%360;if(srcScene){const r=fitModel(srcScene);setModel(r.fit,'GLB',r.tris)}else calInfo();calOut()};
- $('#calc').onclick=()=>{const ta=$('#calt');const done=()=>stat('GLAND_POSITIONS copiado: cole no script.js.');if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();document.execCommand('copy');done()});else{ta.select();document.execCommand('copy');done()}};
+ $('#calr').onclick=()=>{MODEL.rotY=(MODEL.rotY+180)%360;refit();calOut()};
+ $('#calz').onclick=()=>{const d=JSON.parse(JSON.stringify(DEFAULTS));const rot=MODEL.rotY!=d.MODEL.rotY;Object.assign(MODEL,d.MODEL);G.forEach(g=>{g.p=d.GLAND_POSITIONS[g.id].slice();placeG(g)});
+  if(rot)refit();else applyAdj();if(op){op.value=Math.round((1-MODEL.opacity)*100);opSet()}calInfo();calOut();stat('Valores padrão restaurados.')};
+ $('#calc').onclick=()=>{const ta=$('#calt');const done=()=>stat('MODEL e GLAND_POSITIONS copiados: cole no topo do script.js.');if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();document.execCommand('copy');done()});else{ta.select();document.execCommand('copy');done()}};
  addEventListener('keydown',e=>{if(!calId||/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;const st=e.shiftKey?.001:e.ctrlKey?.02:.005,k=e.key;let d=null;
+  if(calId=='model'&&(k=='+'||k=='='||k=='-'||k=='_')){e.preventDefault();const f=e.shiftKey?1.002:1.01;MODEL.scale=f4(MODEL.scale*(k=='-'||k=='_'?1/f:f));applyAdj();calInfo();calOut();return}
   if(k=='ArrowLeft')d=[-st,0,0];else if(k=='ArrowRight')d=[st,0,0];else if(k=='ArrowUp')d=[0,st,0];else if(k=='ArrowDown')d=[0,-st,0];else if(k=='PageUp'||k=='e'||k=='E')d=[0,0,st];else if(k=='PageDown'||k=='q'||k=='Q')d=[0,0,-st];
   if(d){e.preventDefault();calMove(d)}else if(k=='Escape'){calId=null;cs.value='';calOut()}});
  calInfo();calOut()}
 
 loadModel();
 const look=tgt.clone();let t0=0;
-(function loop(t){requestAnimationFrame(loop);if(!visible)return;const dt=t-t0;t0=t;
+(function loop(t){requestAnimationFrame(loop);if(!visible||document.hidden)return;const dt=t-t0;t0=t;
 if(ty!==null)ry+=(ty-ry)*.06;else if(!RM&&!sel&&!pin.size&&!CAL)ry+=.0025;grp.rotation.y=ry;
 look.lerp(tgt,.06);cam.position.lerp(v3.set(look.x,look.y+(sel?0:.2),dist+look.z),.06);cam.lookAt(look);
 HM.uniforms.uT.value=RM?0:t/1000;
-gl.forEach((m,i)=>{const u=m.userData,p=RM?1:1+.12*Math.sin(t/350+i);m.scale.set((u.g.sx||1)*p,p,p);u.mt.opacity+=((!sel||sel==u.g?1:.12)-u.mt.opacity)*.1});
+gl.forEach((m,i)=>{const u=m.userData,p=RM?1:1+.12*Math.sin(t/350+i);m.scale.set((u.g.sx||1)*p,p,p);u.mt.opacity+=((!sel||sel==u.g?1:.12)-u.mt.opacity)*.1;u.hm.opacity=u.mt.opacity*GLAND_GLOW});
 if(pts.visible)for(let i=0;i<N;i++){pa[i*3+1]+=.003+(i%5)*.0006;if(pa[i*3+1]>BY1)pa[i*3+1]=BY0}pg.attributes.position.needsUpdate=true;
-window.__tick&&window.__tick(t);R.render(sc,cam);layout()})(0)}
+window.__tick&&window.__tick(t);
+// 1º o corpo (camada 1); limpa a profundidade; 2º glândulas e fluxos (camada 0), sempre visíveis por dentro do corpo
+R.clear();cam.layers.set(1);R.render(sc,cam);R.clearDepth();cam.layers.set(0);R.render(sc,cam);layout()})(0)}
 // ===== acréscimos: seções de conteúdo =====
 const mk=(sel,arr,f)=>{$(sel).innerHTML=arr.map(f).join('')};
 mk('#dz',[
