@@ -1,0 +1,11 @@
+{
+  "name": "testes-sistema-endocrino",
+  "private": true,
+  "description": "Teste automático do site no Chrome sem janela (desktop e celular)",
+  "scripts": {
+    "test": "node teste.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}
