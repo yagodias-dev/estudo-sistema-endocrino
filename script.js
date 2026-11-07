@@ -2,7 +2,8 @@ const $=s=>document.querySelector(s),RM=matchMedia('(prefers-reduced-motion:redu
 // ============================================================
 // CONFIGURAÇÃO DO CORPO 3D — edite aqui
 // ============================================================
-// Modelo anatômico (GLB). Se o arquivo não existir ou falhar, o site usa o corpo procedural.
+// O corpo oficial do site é o procedural (desenhado no código). MODEL guarda as medidas usadas por ele
+// e pelo modo ?calibrar; o carregamento de arquivo GLB foi desativado porque o site não usa esse arquivo.
 //  height  = altura final do corpo em unidades 3D (pés em y=0, topo da cabeça em y=height)
 //  rotY    = giro em graus se o modelo não estiver de frente (0, 90, 180 ou 270)
 //  upright = true: se o modelo vier "deitado" (eixo Z para cima), ele é colocado de pé sozinho
@@ -12,11 +13,6 @@ const $=s=>document.querySelector(s),RM=matchMedia('(prefers-reduced-motion:redu
 //  maxTris = acima disso, o status avisa que o modelo está pesado para celular
 //  prepass = true: mostra só a superfície mais próxima do corpo (evita camadas internas embolando o brilho)
 const MODEL = { url: 'assets/corpo.glb', height: 1.8, rotY: 0, upright: true, scale: 1, offset: [0, 0, 0], opacity: 0.5, maxTris: 250000, prepass: true };
-
-// Crédito do modelo (rodapé). Copie a licença exatamente como aparece na página do Sketchfab.
-//  license    = nome da licença, ex.: 'CC BY 4.0'  (vazio = o rodapé não mostra licença)
-//  licenseUrl = link da licença, ex.: 'https://creativecommons.org/licenses/by/4.0/deed.pt-br'
-const MODEL_CREDIT = { title: 'Male Anatomy Study', author: 'HEC', site: 'Sketchfab', url: 'https://sketchfab.com/3d-models/male-anatomy-study-8b6b4d5daad74da8bd821eef5a0a8511', license: '', licenseUrl: '' };
 
 // Aparência de holograma (cor, brilho do corpo, brilho das bordas)
 const HOLO_CFG = { color: 0x20e0ff, base: 0.12, rim: 0.5 };
@@ -72,8 +68,9 @@ const tb=$('#tb');tb.innerHTML=G.map(g=>`<tr><td>${g.n}</td><td>${g.h}</td><td>$
 $('#q').oninput=e=>{const v=e.target.value.toLowerCase();[...tb.rows].forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(v))};
 function info(g){$('#panel').innerHTML=`<h3>${g.n}</h3><p><b>Hormônios:</b> ${g.h}</p><p><b>Função:</b> ${g.f}</p><p><b>Doenças:</b> ${g.d}</p>`}
 // título letra por letra
-const t=$('#t');t.innerHTML=[...t.textContent].map((c,i)=>`<span style="animation-delay:${.6+i*.04}s">${c==' '?'&nbsp;':c}</span>`).join('');
-t.setAttribute('aria-label',t.textContent);
+// cada palavra fica num bloco que não quebra, para o título nunca se partir no meio de uma palavra
+const t=$('#t'),tt=t.textContent;let ci=0;t.innerHTML=tt.split(' ').map(w=>`<span class="w">${[...w].map(c=>`<span class="c" style="animation-delay:${(.6+(ci++)*.04).toFixed(2)}s">${c}</span>`).join('')}</span>`).join(' ');
+t.setAttribute('aria-label',tt);
 // tema, cursor, progresso, reveal, menu
 $('#th').onclick=()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme=='dark'?'light':'dark'};
 const cur=$('.cur');addEventListener('pointermove',e=>{cur.style.transform=`translate(${e.clientX-7}px,${e.clientY-7}px)`;cur.classList.toggle('big',!!e.target.closest('button,a,canvas'))});
@@ -85,7 +82,7 @@ new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&links.forEach(a=>a.
 // partículas da abertura: silhueta do corpo
 (()=>{const c=hc,x=c.getContext('2d');let W,H,P=[],m={x:-999,y:-999};
 const inB=(u,v)=>{const dx=Math.abs(u);return(dx*dx+(v-.1)**2<.012)||(dx<.03&&v>.17&&v<.25)||(dx<.15&&v>.23&&v<.62)||(dx>.14&&dx<.2&&v>.25&&v<.7)||(dx<.14&&dx>.015&&v>.62&&v<1.05)};
-function rs(){W=c.width=innerWidth;H=c.height=innerHeight;const S=H*.8,n=W<700?700:1300;P=[];while(P.length<n){const u=Math.random()-.5,v=Math.random()*1.05-.05;if(inB(u,v))P.push({hx:W/2+u*S,hy:H*.1+v*S,x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.6,k:Math.random()})}}
+let lw=0;function rs(){if(innerWidth===lw&&P.length)return;lw=innerWidth;W=c.width=innerWidth;H=c.height=innerHeight;const S=H*.8,n=W<700?700:1300;P=[];while(P.length<n){const u=Math.random()-.5,v=Math.random()*1.05-.05;if(inB(u,v))P.push({hx:W/2+u*S,hy:H*.1+v*S,x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.6,k:Math.random()})}}
 rs();addEventListener('resize',rs);addEventListener('pointermove',e=>{m.x=e.clientX;m.y=e.clientY});
 (function f(t){if(scrollY<innerHeight*1.2){x.clearRect(0,0,W,H);P.forEach(p=>{const tx=p.hx+(RM?0:Math.sin(t/900+p.k*9)*3),ty=p.hy+(RM?0:Math.cos(t/800+p.k*9)*3);p.x+=(tx-p.x)*.04;p.y+=(ty-p.y)*.04;const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy);if(d<90){p.x+=dx/d*(90-d)*.2;p.y+=dy/d*(90-d)*.2}x.fillStyle=p.k<.5?'#20e0ff':p.k<.8?'#ff3df0':'#ffb020';x.globalAlpha=.8;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()})}requestAnimationFrame(f)})(0)})();
 // feedback negativo
@@ -93,9 +90,9 @@ const t4=$('#t4');function fb(){const v=+t4.value,n=['#n1','#n2','#n3'].map($);n
 t4.oninput=fb;fb();
 // simulador de glicemia (unidades ilustrativas)
 (()=>{const c=$('#gc'),x=c.getContext('2d');let g=90,i=0,l=0,ca=0,ex=0,H=[];
-$('#eat').onclick=()=>ca+=70;$('#ex').onclick=()=>ex=240;
+$('#eat').onclick=()=>ca=Math.min(ca+70,140);$('#ex').onclick=()=>ex=240;
 setInterval(()=>{g+=ca*.03;ca*=.97;g-=i*.012+(ex>0?.25:0);ex--;g+=l*.01+(90-g)*.003;i+=(Math.max(0,g-90)*.9-i)*.06;l+=(Math.max(0,88-g)*4-l)*.06;H.push([g,i,l]);if(H.length>400)H.shift();
-x.clearRect(0,0,800,260);[['#20e0ff',0,1],['#ff3df0',1,2],['#ffb020',2,3]].forEach(([col,k,sc])=>{x.strokeStyle=col;x.lineWidth=3;x.beginPath();H.forEach((p,j)=>{const y=260-(k?p[k]*2.2+10:(p[0]-40)*1.6);j?x.lineTo(j*2,y):x.moveTo(0,y)});x.stroke()})},60)})();
+x.clearRect(0,0,800,260);[['#20e0ff',0,1],['#ff3df0',1,2],['#ffb020',2,3]].forEach(([col,k,sc])=>{x.strokeStyle=col;x.lineWidth=3;x.beginPath();H.forEach((p,j)=>{const y=Math.max(4,Math.min(256,260-(k?p[k]*2.2+10:(p[0]-40)*1.6)));j?x.lineTo(j*2,y):x.moveTo(0,y)});x.stroke()})},60)})();
 // quiz
 const Q=[['Hormônios chegam às células-alvo por qual via?',['Sangue','Ductos da pele','Nervos'],0,'Glândulas endócrinas lançam hormônios no sangue.'],
 ['Qual hormônio reduz a glicose no sangue?',['Glucagon','Insulina','Cortisol'],1,'A insulina favorece a entrada de glicose nas células.'],
@@ -104,14 +101,13 @@ const Q=[['Hormônios chegam às células-alvo por qual via?',['Sangue','Ductos 
 ['A melatonina é produzida pela…',['Tireoide','Pineal','Adrenal'],1,'Ela regula o ritmo circadiano.']];
 let qi=0,pt=0;function rq(){const z=$('#qz');if(qi>=Q.length){z.innerHTML=`<h3>Pontuação: ${pt}/${Q.length}</h3><button id="rr">Refazer</button>`;$('#rr').onclick=()=>{qi=pt=0;rq()};return}
 const q=Q[qi];z.innerHTML=`<div class="q"><h3>${qi+1}/${Q.length}. ${q[0]}</h3>${q[1].map((o,i)=>`<button data-i="${i}">${o}</button>`).join('')}<p id="ex2" aria-live="polite"></p></div>`;
-z.querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i==q[2])pt++;z.querySelectorAll('button').forEach((x,j)=>{x.disabled=true;x.classList.add(j==q[2]?'ok':'no'==1?'':j==i?'no':'')});b.classList.add(i==q[2]?'ok':'no');$('#ex2').textContent=q[3];setTimeout(()=>{qi++;rq()},2200)})}rq();
+z.querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i==q[2])pt++;z.querySelectorAll('button').forEach((x,j)=>{x.disabled=true;if(j==q[2])x.classList.add('ok');else if(j==i)x.classList.add('no')});b.classList.add(i==q[2]?'ok':'no');$('#ex2').textContent=q[3];setTimeout(()=>{qi++;rq()},2200)})}rq();
 // ===== modelo 3D (Three.js) + fallback SVG =====
 let sel=null;
 const stat=m=>{const e=$('#m3st');if(e)e.textContent=m};
-// crédito do modelo 3D no rodapé (a licença só aparece depois de preenchida em MODEL_CREDIT)
-(()=>{const c=$('#m3cr');if(!c)return;const C=MODEL_CREDIT,a=(h,t)=>`<a href="${h}" target="_blank" rel="noopener">${t}</a>`;c.innerHTML=`Modelo 3D: ${a(C.url,C.title)}, por ${C.author}, via ${C.site}`+(C.license?`, licença ${C.licenseUrl?a(C.licenseUrl,C.license):C.license}`:'')+'.'})();
-function fallback(){const cv=$('#cv'),st=cv.parentNode;cv.remove();const ow=$('#m3opw');if(ow)ow.hidden=true;$('.bar').hidden=false;stat('Modelo 3D indisponível neste dispositivo: mostrando uma versão simplificada.');
-const sv=`<svg id="fb" viewBox="0 0 200 400" role="img" aria-label="Corpo humano com glândulas"><g fill="none" stroke="#20e0ff" stroke-width="2"><circle cx="100" cy="40" r="22"/><rect x="72" y="70" width="56" height="200" rx="22"/><rect x="40" y="75" width="20" height="170" rx="10"/><rect x="140" y="75" width="20" height="170" rx="10"/><rect x="76" y="270" width="22" height="115" rx="10"/><rect x="102" y="270" width="22" height="115" rx="10"/></g>${G.map(g=>[1,g.m?-1:1].filter((v,i,a)=>!(i&&!g.m)).map(s=>`<circle class="fg" data-id="${g.id}" cx="${100+g.p[0]*200*s}" cy="${380-g.p[1]*200}" r="${Math.max(5,g.s*110)}" fill="#${g.c.toString(16).padStart(6,'0')}" tabindex="0" role="button" aria-label="${g.n}"/>`).join('')).join('')}</svg>`;
+// versão 2D (aparelhos sem WebGL): mesmas glândulas, proporções iguais às do corpo 3D (escala 200 px por unidade)
+function fallback(){const cv=$('#cv'),st=cv.parentNode;cv.remove();const ow=$('#m3opw');if(ow)ow.hidden=true;stat('Toque ou clique numa glândula para ver os detalhes.');
+const sv=`<svg id="fb" viewBox="0 0 200 400" role="img" aria-label="Corpo humano com glândulas"><g fill="none" stroke="#20e0ff" stroke-width="2"><circle cx="100" cy="40" r="22"/><rect x="72" y="70" width="56" height="142" rx="22"/><rect x="40" y="75" width="20" height="160" rx="10"/><rect x="140" y="75" width="20" height="160" rx="10"/><rect x="76" y="206" width="22" height="176" rx="10"/><rect x="102" y="206" width="22" height="176" rx="10"/></g>${G.map(g=>[1,g.m?-1:1].filter((v,i,a)=>!(i&&!g.m)).map(s=>`<circle class="fg" data-id="${g.id}" cx="${100+g.p[0]*200*s}" cy="${380-g.p[1]*200}" r="${Math.max(5,g.s*110)}" fill="#${g.c.toString(16).padStart(6,'0')}" tabindex="0" role="button" aria-label="${g.n}"/>`).join('')).join('')}</svg>`;
 st.insertAdjacentHTML('afterbegin',sv);st.querySelectorAll('.fg').forEach(e=>{const go=()=>info(G.find(g=>g.id==e.dataset.id));e.onclick=go;e.onkeydown=k=>k.key=='Enter'&&go()})}
 addEventListener('load',()=>{try{if(!window.THREE)throw 0;init3D()}catch(e){console.error(e);fallback()}});
 function init3D(){
@@ -190,12 +186,6 @@ function fitModel(src){src.updateMatrixWorld(true);const up=new THREE.Group(),pa
  fit.scale.setScalar(s);fit.position.set(-ct.x*s,-bx.min.y*s,-ct.z*s);
  adj=new THREE.Group();adj.add(fit);applyAdj();return{fit:adj,tris:Math.round(n)}}
 const kTri=n=>(n>=1e6?(n/1e6).toFixed(1).replace('.',',')+' milhões':Math.round(n/1000)+' mil')+' triângulos';
-function triMsg(n){return 'Modelo anatômico carregado · '+kTri(n)+'.'+(n>MODEL.maxTris?' Atenção: passa de '+kTri(MODEL.maxTris)+' e pode ficar lento no celular. Reduza o modelo (decimate) se travar.':'')}
-function loadModel(){if(!THREE.GLTFLoader){stat('Carregador de modelos indisponível: mostrando o corpo simplificado.');return}
- stat('Carregando modelo…');
- new THREE.GLTFLoader().load(MODEL.url,gltf=>{try{srcScene=gltf.scene;const r=fitModel(srcScene);setModel(r.fit,'GLB',r.tris);stat(triMsg(r.tris))}catch(e){console.warn(e);stat('O arquivo '+MODEL.url+' foi baixado, mas não pôde ser usado. Mostrando o corpo simplificado.')}},
-  x=>{if(x&&x.lengthComputable&&x.total)stat('Carregando modelo… '+Math.round(x.loaded/x.total*100)+'%')},
-  e=>{console.info('GLB não carregado:',e);stat('Modelo '+MODEL.url+' não encontrado ou com erro: mostrando o corpo simplificado.')})}
 setModel(procBody(),'procedural');
 
 // --- glândulas (posições vêm de GLAND_POSITIONS) ---
@@ -244,7 +234,9 @@ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pin.set(
 cv.addEventListener('pointermove',e=>{if(!pin.has(e.pointerId))return;pin.set(e.pointerId,e);if(pin.size==2){const a=[...pin.values()],d=Math.hypot(a[0].clientX-a[1].clientX,a[0].clientY-a[1].clientY);dist=Math.max(.35,Math.min(6,dist*pd/d));pd=d;drag=9;return}drag+=Math.abs(e.clientX-last);ry+=(e.clientX-last)*.01;last=e.clientX});
 cv.addEventListener('pointerup',e=>{pin.delete(e.pointerId);if(drag<6){const r=cv.getBoundingClientRect();mv.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mv,cam);const h=ray.intersectObjects(hits.filter(h=>h.parent.visible))[0];if(h)pick(h.object.userData.g)}});
 cv.addEventListener('pointercancel',e=>pin.delete(e.pointerId));
-cv.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(.35,Math.min(6,dist*(1+e.deltaY*.001)))},{passive:false});
+// rolagem comum rola a página; Ctrl (ou ⌘) + rolagem e a pinça do touchpad dão zoom
+const zh=$('#zh');let zt=0;
+cv.addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey)){if(zh){zh.hidden=false;clearTimeout(zt);zt=setTimeout(()=>zh.hidden=true,1800)}return}e.preventDefault();if(zh)zh.hidden=true;dist=Math.max(.35,Math.min(6,dist*(1+e.deltaY*.001)))},{passive:false});
 new IntersectionObserver(e=>visible=e[0].isIntersecting).observe(box);
 
 // --- modo calibração (?calibrar) ---
@@ -272,7 +264,6 @@ if(CAL){$('#cal').hidden=false;const cs=$('#calsel');cs.innerHTML='<option value
   if(d){e.preventDefault();calMove(d)}else if(k=='Escape'){calId=null;cs.value='';calOut()}});
  calInfo();calOut()}
 
-loadModel();
 const look=tgt.clone();let t0=0;
 (function loop(t){requestAnimationFrame(loop);if(!visible||document.hidden)return;const dt=t-t0;t0=t;
 if(ty!==null)ry+=(ty-ry)*.06;else if(!RM&&!sel&&!pin.size&&!CAL)ry+=.0025;grp.rotation.y=ry;
@@ -350,7 +341,7 @@ root.addEventListener('pointerdown',e=>{const c=e.target.closest('.chip');if(!c)
 c.onpointermove=ev=>{const dx=ev.clientX-x0,dy=ev.clientY-y0;if(Math.abs(dx)+Math.abs(dy)>6)mv=1;if(mv){c.style.transform=`translate(${dx}px,${dy}px)`;c.classList.add('drag')}};
 c.onpointerup=ev=>{c.onpointermove=c.onpointerup=null;c.style.pointerEvents='none';const el=document.elementFromPoint(ev.clientX,ev.clientY);c.style.pointerEvents='';c.style.transform='';c.classList.remove('drag');if(mv){const s=el&&el.closest('.slot');if(s)drop(c,s)}else sel(c)}});
 root.addEventListener('click',e=>{const s=e.target.closest('.slot');if(s&&sl)drop(sl,s)});
-root.addEventListener('keydown',e=>{if(e.key=='Enter'){const c=e.target.closest('.chip');if(c)sel(c);else if(e.target.closest('.slot')&&sl)drop(sl,e.target.closest('.slot'))}});
+root.addEventListener('keydown',e=>{if(e.key=='Enter'||e.key==' '){if(e.target.closest('.chip,.slot'))e.preventDefault();const c=e.target.closest('.chip');if(c)sel(c);else if(e.target.closest('.slot')&&sl)drop(sl,e.target.closest('.slot'))}});
 build()})();
 // ===== acréscimos: eixo, estresse, melatonina, sangue =====
 const MOB=matchMedia('(pointer:coarse)').matches||innerWidth<700;
