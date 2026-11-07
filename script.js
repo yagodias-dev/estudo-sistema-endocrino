@@ -1,4 +1,10 @@
 const $=s=>document.querySelector(s),RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+// MOB = celular ou tela pequena; LOW = aparelho fraco (poucos núcleos, pouca memória ou economia de dados ligada)
+const MOB=matchMedia('(pointer:coarse)').matches||innerWidth<700,NC=navigator.hardwareConcurrency||4,NM=navigator.deviceMemory||4;
+const LOW=(MOB&&(NC<=4||NM<=2||innerWidth<420))||NC<=2||!!(navigator.connection&&navigator.connection.saveData);
+// pixel ratio dos canvas: no máximo 1,5 (aparelho fraco: 1)
+const DPR=()=>LOW?1:Math.min(devicePixelRatio||1,1.5);
+document.documentElement.classList.toggle('low',LOW);
 // ============================================================
 // CONFIGURAÇÃO DO CORPO 3D — edite aqui
 // ============================================================
@@ -116,16 +122,20 @@ new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&links.forEach(a=>a.
 // partículas da abertura: silhueta do corpo
 (()=>{const c=hc,x=c.getContext('2d');let W,H,P=[],m={x:-999,y:-999};
 const inB=(u,v)=>{const dx=Math.abs(u);return(dx*dx+(v-.1)**2<.012)||(dx<.03&&v>.17&&v<.25)||(dx<.15&&v>.23&&v<.62)||(dx>.14&&dx<.2&&v>.25&&v<.7)||(dx<.14&&dx>.015&&v>.62&&v<1.05)};
-let lw=0;function rs(){if(innerWidth===lw&&P.length)return;lw=innerWidth;W=c.width=innerWidth;H=c.height=innerHeight;const S=H*.8,n=W<700?700:1300;P=[];while(P.length<n){const u=Math.random()-.5,v=Math.random()*1.05-.05;if(inB(u,v))P.push({hx:W/2+u*S,hy:H*.1+v*S,x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.6,k:Math.random()})}}
+let lw=0;function rs(){if(innerWidth===lw&&P.length)return;lw=innerWidth;const d=DPR();W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);const S=H*.8,n=LOW?350:W<700?700:1300;P=[];while(P.length<n){const u=Math.random()-.5,v=Math.random()*1.05-.05;if(inB(u,v))P.push({hx:W/2+u*S,hy:H*.1+v*S,x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.6,k:Math.random()})}}
 rs();addEventListener('resize',rs);addEventListener('pointermove',e=>{m.x=e.clientX;m.y=e.clientY});
-(function f(t){if(scrollY<innerHeight*1.2){x.clearRect(0,0,W,H);P.forEach(p=>{const tx=p.hx+(RM?0:Math.sin(t/900+p.k*9)*3),ty=p.hy+(RM?0:Math.cos(t/800+p.k*9)*3);p.x+=(tx-p.x)*.04;p.y+=(ty-p.y)*.04;const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy);if(d<90){p.x+=dx/d*(90-d)*.2;p.y+=dy/d*(90-d)*.2}x.fillStyle=p.k<.5?'#20e0ff':p.k<.8?'#ff3df0':'#ffb020';x.globalAlpha=.8;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()})}requestAnimationFrame(f)})(0)})();
+// só anima enquanto a abertura está na tela e a aba está visível
+let run=0,vis=1;const go=()=>{if(!run&&vis&&!document.hidden){run=1;requestAnimationFrame(f)}};
+new IntersectionObserver(e=>{vis=e[0].isIntersecting;go()}).observe($('#hero'));document.addEventListener('visibilitychange',go);
+function f(t){if(!vis||document.hidden){run=0;return}{x.clearRect(0,0,W,H);P.forEach(p=>{const tx=p.hx+(RM?0:Math.sin(t/900+p.k*9)*3),ty=p.hy+(RM?0:Math.cos(t/800+p.k*9)*3);p.x+=(tx-p.x)*.04;p.y+=(ty-p.y)*.04;const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy);if(d<90){p.x+=dx/d*(90-d)*.2;p.y+=dy/d*(90-d)*.2}x.fillStyle=p.k<.5?'#20e0ff':p.k<.8?'#ff3df0':'#ffb020';x.globalAlpha=.8;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()})}requestAnimationFrame(f)}go()})();
 // feedback negativo
 const t4=$('#t4');function fb(){const v=+t4.value,n=['#n1','#n2','#n3'].map($);n.forEach(e=>e.classList.remove('hot'));let s;if(v>66){n[2].classList.add('hot');s='T4 alto: hipotálamo e hipófise reduzem TRH e TSH; a tireoide desacelera.'}else if(v<34){n[0].classList.add('hot');n[1].classList.add('hot');s='T4 baixo: TRH e TSH aumentam e estimulam a tireoide a produzir mais T4.'}else s='T4 em equilíbrio: o sistema mantém produção estável.';$('#fbt').textContent=s}
 t4.oninput=fb;fb();
 // simulador de glicemia (unidades ilustrativas)
-(()=>{const c=$('#gc'),x=c.getContext('2d');let g=90,i=0,l=0,ca=0,ex=0,H=[];
+(()=>{const c=$('#gc'),x=c.getContext('2d');let g=90,i=0,l=0,ca=0,ex=0,H=[],gv=0;new IntersectionObserver(e=>gv=e[0].isIntersecting).observe(c);
 $('#eat').onclick=()=>ca=Math.min(ca+70,140);$('#ex').onclick=()=>ex=240;
-setInterval(()=>{g+=ca*.03;ca*=.97;g-=i*.012+(ex>0?.25:0);ex--;g+=l*.01+(90-g)*.003;i+=(Math.max(0,g-90)*.9-i)*.06;l+=(Math.max(0,88-g)*4-l)*.06;H.push([g,i,l]);if(H.length>400)H.shift();
+// pausa quando o gráfico está fora da tela ou a aba está escondida
+setInterval(()=>{if(!gv||document.hidden)return;g+=ca*.03;ca*=.97;g-=i*.012+(ex>0?.25:0);ex--;g+=l*.01+(90-g)*.003;i+=(Math.max(0,g-90)*.9-i)*.06;l+=(Math.max(0,88-g)*4-l)*.06;H.push([g,i,l]);if(H.length>400)H.shift();
 x.clearRect(0,0,800,260);[['#20e0ff',0,1],['#ff3df0',1,2],['#ffb020',2,3]].forEach(([col,k,sc])=>{x.strokeStyle=col;x.lineWidth=3;x.beginPath();H.forEach((p,j)=>{const y=Math.max(4,Math.min(256,260-(k?p[k]*2.2+10:(p[0]-40)*1.6)));j?x.lineTo(j*2,y):x.moveTo(0,y)});x.stroke()})},60)})();
 // quiz
 const Q=[['Hormônios chegam às células-alvo por qual via?',['Sangue','Ductos da pele','Nervos'],0,'Glândulas endócrinas lançam hormônios no sangue.'],
@@ -146,9 +156,9 @@ st.insertAdjacentHTML('afterbegin',sv);st.querySelectorAll('.fg').forEach(e=>{co
 addEventListener('load',()=>{try{if(!window.THREE)throw 0;init3D()}catch(e){console.error(e);fallback()}});
 function init3D(){
 const cv=$('#cv'),box=cv.parentNode,CAL=/[?&]calibrar(?:[=&#]|$)/.test(location.search);
-// aparelho fraco: tela pequena ou poucos núcleos → sem antialias, pixel ratio 1 e shader simplificado
-const WEAK=(MOB&&(innerWidth<420||(navigator.hardwareConcurrency||4)<=4))||(navigator.hardwareConcurrency||8)<=2;
-const R=new THREE.WebGLRenderer({canvas:cv,antialias:!WEAK,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,WEAK?1:MOB?1.5:1.75));R.autoClear=false;
+// aparelho fraco (LOW): sem antialias, pixel ratio 1 e shader simplificado
+const WEAK=LOW;
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:!WEAK,alpha:true});R.setPixelRatio(DPR());R.autoClear=false;
 const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,1,.05,50),grp=new THREE.Group();sc.add(grp);
 const body=new THREE.Group(),gl=[],hits=[],GM={},v3=new THREE.Vector3();grp.add(body);
 
@@ -248,7 +258,7 @@ function layout(){const cols={l:[],r:[]};
    o.dt.setAttribute('cx',it.x);o.dt.setAttribute('cy',it.y);o.dt.style.opacity=dim?.2:1})})}
 
 // --- partículas de sangue ---
-const N=160,pg=new THREE.BufferGeometry(),pa=new Float32Array(N*3),BY0=.55,BY1=1.6;for(let i=0;i<N;i++){pa[i*3]=(Math.random()-.5)*.06;pa[i*3+1]=BY0+Math.random()*(BY1-BY0);pa[i*3+2]=(Math.random()-.5)*.04}
+const N=LOW?70:160,pg=new THREE.BufferGeometry(),pa=new Float32Array(N*3),BY0=.55,BY1=1.6;for(let i=0;i<N;i++){pa[i*3]=(Math.random()-.5)*.06;pa[i*3+1]=BY0+Math.random()*(BY1-BY0);pa[i*3+2]=(Math.random()-.5)*.04}
 pg.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(pg,new THREE.PointsMaterial({color:0xff3d6a,size:.022,blending:THREE.AdditiveBlending,transparent:true}));pts.visible=false;grp.add(pts);
 
 let sex='m',tgt=new THREE.Vector3(0,.9,0),dist=3.5,ry=0,ty=null,drag=0,last=null,visible=true,pin=new Map(),pd=0;
@@ -378,7 +388,6 @@ root.addEventListener('click',e=>{const s=e.target.closest('.slot');if(s&&sl)dro
 root.addEventListener('keydown',e=>{if(e.key=='Enter'||e.key==' '){if(e.target.closest('.chip,.slot'))e.preventDefault();const c=e.target.closest('.chip');if(c)sel(c);else if(e.target.closest('.slot')&&sl)drop(sl,e.target.closest('.slot'))}});
 build()})();
 // ===== acréscimos: eixo, estresse, melatonina, sangue =====
-const MOB=matchMedia('(pointer:coarse)').matches||innerWidth<700;
 const loopOn=(el,fn,thr,cb)=>{let id=0,vis=0,l=0;const f=t=>{fn(t,t-l);l=t;id=vis?requestAnimationFrame(f):0};new IntersectionObserver(e=>{vis=e[0].isIntersecting;cb&&cb(vis);if(vis&&!id){l=performance.now();id=requestAnimationFrame(f)}},{threshold:thr||.1}).observe(el)};
 // --- eixo hipotálamo → hipófise → glândula-alvo ---
 (()=>{const b=$('#ax'),lg=$('#axl'),LB=b.textContent,BO=[['hip'],['hpf'],['tir','adr','ova','tes'],['hip','hpf']];let on=0,step=0,iv=0,E,segs=[];
@@ -398,28 +407,27 @@ lg.onclick=e=>{if(e.target.id=='axs')stop();if(e.target.id=='axn'){step=(step+1)
 window.__tick=t=>{if(!on||!E)return;const sx=E.getSex();segs.forEach(s=>{const ok=!s.sx||s.sx==sx,ac=ok&&s.st.includes(step);s.m.visible=ok;s.m.material.opacity+=((ac?.85:.05)-s.m.material.opacity)*.1;s.pt.visible=ac;if(ac){for(let i=0;i<s.n;i++){const u=RM?(i+.5)/s.n:((t/1300+i/s.n)%1),w=Math.sin(t/200+i)*.008;s.pa[i*3]=s.a.x+(s.b.x-s.a.x)*u+w;s.pa[i*3+1]=s.a.y+(s.b.y-s.a.y)*u;s.pa[i*3+2]=s.a.z+(s.b.z-s.a.z)*u+w}s.pt.geometry.attributes.position.needsUpdate=true}});
 E.gl.forEach(m=>{if(BO[step].includes(m.userData.g.id))m.scale.multiplyScalar(1.6)})}})();
 // --- estresse ---
-(()=>{const sec=$('#estresse'),c=$('#sc'),x=c.getContext('2d');let W,H,ph=0,it=0,act=0,sp=0,P=[];const rs=()=>{W=c.width=c.clientWidth;H=c.height=c.clientHeight};rs();addEventListener('resize',rs);
+(()=>{const sec=$('#estresse'),c=$('#sc'),x=c.getContext('2d');let W,H,ph=0,it=0,act=0,sp=0,P=[];const rs=()=>{const d=DPR();W=c.clientWidth;H=c.clientHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0)};rs();addEventListener('resize',rs);
 const heart=(cx,cy,s,col)=>{x.save();x.translate(cx,cy);x.scale(s,s);x.beginPath();x.moveTo(0,12);x.bezierCurveTo(-30,-10,-18,-34,0,-18);x.bezierCurveTo(18,-34,30,-10,0,12);x.fillStyle=col;x.fill();x.restore()};
 function draw(t,dt){dt=Math.min(dt||16,50);it+=((act?1:0)-it)*.02;const fq=1+2.4*it;ph+=dt*fq*Math.PI*2/1000;const b=Math.pow(Math.max(0,Math.sin(ph)),2),k=H/280,hx=W*.78,hy=H*.5;
 x.fillStyle='#0a0f2a';x.fillRect(0,0,W,H);const ad=[[W*.14,H*.5],[W*.3,H*.5]];
-ad.forEach(([ax,ay])=>{x.fillStyle='#5a1f2a';x.beginPath();x.ellipse(ax,ay+34*k,24*k,34*k,0,0,7);x.fill();x.fillStyle='#ffb020';x.shadowColor='#ffb020';x.shadowBlur=MOB?0:8+14*b;x.beginPath();x.ellipse(ax,ay-6*k,(12+5*b)*k,(8+3*b)*k,0,0,7);x.fill();x.shadowBlur=0});
+ad.forEach(([ax,ay])=>{x.fillStyle='#5a1f2a';x.beginPath();x.ellipse(ax,ay+34*k,24*k,34*k,0,0,7);x.fill();x.fillStyle='#ffb020';x.shadowColor='#ffb020';x.shadowBlur=MOB||LOW?0:8+14*b;x.beginPath();x.ellipse(ax,ay-6*k,(12+5*b)*k,(8+3*b)*k,0,0,7);x.fill();x.shadowBlur=0});
 sp+=dt*(.004+.022*it)*(MOB?.6:1);while(sp>1){sp--;if(P.length<(MOB?30:70)){const a=ad[Math.random()<.5?0:1],ky=Math.random()<.5;P.push({p:[a[0],a[1]-6*k,(a[0]+hx)/2,H*.06,hx,hy],u:0,v:ky?.011:.0035,c:ky?'#ff3df0':'#ffb020',r:ky?3:4.5})}}
 P=P.filter(q=>(q.u+=q.v*dt/16*(1+it*.8))<1);P.forEach(q=>{const a=1-q.u,px=a*a*q.p[0]+2*a*q.u*q.p[2]+q.u*q.u*q.p[4],py=a*a*q.p[1]+2*a*q.u*q.p[3]+q.u*q.u*q.p[5];x.fillStyle=q.c;x.beginPath();x.arc(px,py,q.r,0,7);x.fill()});
 heart(hx,hy,(2.1+.5*b)*k,'#ff3d6a');x.fillStyle='#cfd6ff';x.font=`${12}px Inter,sans-serif`;x.fillText('Adrenais',W*.14-6,H*.93);x.fillText('Coração',hx-24,H*.93);x.fillText('Ritmo: '+(it<.33?'calmo':it<.75?'acelerando':'acelerado'),hx-46,H*.07)}
-const mn=document.querySelector('main');
-if(RM){draw(0,16)}else loopOn(sec,draw,.35,v=>{act=v;mn.classList.toggle('shake',v);if(!v){it=0;P=[]}})})();
+if(RM){draw(0,16)}else loopOn(sec,draw,.35,v=>{act=v;c.classList.toggle('shake',v&&!MOB);if(!v){it=0;P=[]}})})();
 // --- melatonina ---
 (()=>{const sec=$('#melatonina'),c=$('#nt'),x=c.getContext('2d');let W,H,S=[],ss=null,on=0,off=0,id=0;
-function rs(){W=c.width=innerWidth;H=c.height=innerHeight;S=[...Array(MOB?60:150)].map(()=>({x:Math.random()*W,y:Math.random()*H*.9,r:Math.random()*1.5+.3,ph:Math.random()*9}))}rs();addEventListener('resize',rs);
+function rs(){W=c.width=innerWidth;H=c.height=innerHeight;S=[...Array(LOW?40:MOB?60:150)].map(()=>({x:Math.random()*W,y:Math.random()*H*.9,r:Math.random()*1.5+.3,ph:Math.random()*9}))}rs();addEventListener('resize',rs);
 function draw(t){const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#02030f');g.addColorStop(1,'#0b1240');x.globalAlpha=.9;x.fillStyle=g;x.fillRect(0,0,W,H);x.globalAlpha=1;
 S.forEach(s=>{x.globalAlpha=RM?.8:.45+.5*Math.sin(t/600+s.ph);x.fillStyle='#fff';x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill()});x.globalAlpha=1;
-const R=Math.min(W,H)*.07,mx=W*.82,my=H*.22+(RM?0:Math.sin(t/4000)*6);x.shadowColor='#fff8c8';x.shadowBlur=MOB?15:45;x.fillStyle='#f4f1d0';x.beginPath();x.arc(mx,my,R,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#d8d3a8';[[-.3,-.2,.18],[.25,.1,.22],[-.1,.4,.12]].forEach(([a,bb,r])=>{x.beginPath();x.arc(mx+a*R,my+bb*R,r*R,0,7);x.fill()});
+const R=Math.min(W,H)*.07,mx=W*.82,my=H*.22+(RM?0:Math.sin(t/4000)*6);x.shadowColor='#fff8c8';x.shadowBlur=LOW?0:MOB?15:45;x.fillStyle='#f4f1d0';x.beginPath();x.arc(mx,my,R,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#d8d3a8';[[-.3,-.2,.18],[.25,.1,.22],[-.1,.4,.12]].forEach(([a,bb,r])=>{x.beginPath();x.arc(mx+a*R,my+bb*R,r*R,0,7);x.fill()});
 if(!RM&&!MOB){if(!ss&&Math.random()<.004)ss={x:Math.random()*W*.6,y:Math.random()*H*.3,l:0};if(ss){ss.l+=.03;const px=ss.x+ss.l*260,py=ss.y+ss.l*130;x.strokeStyle='#fff';x.globalAlpha=1-ss.l;x.lineWidth=2;x.beginPath();x.moveTo(px,py);x.lineTo(px-50,py-25);x.stroke();x.globalAlpha=1;if(ss.l>=1)ss=null}}}
 const f=t=>{draw(t);id=(on||performance.now()<off)?requestAnimationFrame(f):0};
 new IntersectionObserver(e=>{on=e[0].isIntersecting;c.classList.toggle('on',on);off=on?0:performance.now()+1800;if(RM){draw(0);return}if(!id)id=requestAnimationFrame(f)},{threshold:.25}).observe(sec)})();
 // --- corrente sanguínea (fundo de #acao) ---
 (()=>{const sec=$('#acao'),c=$('#bl'),x=c.getContext('2d');let W,H,mx=-999,my=-999,C=[],M=[];
-function rs(){W=c.width=sec.clientWidth;H=c.height=sec.clientHeight;const n=MOB?12:34;C=[...Array(n)].map(()=>({x:Math.random()*W,y:Math.random()*H,r:10+Math.random()*8,v:.6+Math.random()*.8,ph:Math.random()*6}));M=[...Array(n)].map(()=>({x:Math.random()*W,y:Math.random()*H,r:3+Math.random()*2,v:1+Math.random(),ph:Math.random()*6,c:Math.random()<.5?'#ff3df0':'#20e0ff'}));if(RM)frame(0,16)}
+function rs(){W=c.width=sec.clientWidth;H=c.height=sec.clientHeight;const n=LOW?8:MOB?12:34;C=[...Array(n)].map(()=>({x:Math.random()*W,y:Math.random()*H,r:10+Math.random()*8,v:.6+Math.random()*.8,ph:Math.random()*6}));M=[...Array(n)].map(()=>({x:Math.random()*W,y:Math.random()*H,r:3+Math.random()*2,v:1+Math.random(),ph:Math.random()*6,c:Math.random()<.5?'#ff3df0':'#20e0ff'}));if(RM)frame(0,16)}
 const rep=o=>{const dx=o.x-mx,dy=o.y-my,d=Math.hypot(dx,dy);if(d<110&&d>0){o.x+=dx/d*(110-d)*.08;o.y+=dy/d*(110-d)*.08}};
 function frame(t,dt){const k=Math.min(dt||16,50)/16;x.clearRect(0,0,W,H);
 C.forEach(o=>{o.x+=o.v*k;o.y+=Math.sin(t/800+o.ph)*.25;rep(o);if(o.x>W+30)o.x=-30;x.save();x.translate(o.x,o.y);x.rotate(Math.sin(t/1500+o.ph)*.5);x.globalAlpha=.6;x.fillStyle='#c0283a';x.beginPath();x.ellipse(0,0,o.r,o.r*.7,0,0,7);x.fill();x.fillStyle='#7a1224';x.beginPath();x.ellipse(0,0,o.r*.45,o.r*.3,0,0,7);x.fill();x.restore()});

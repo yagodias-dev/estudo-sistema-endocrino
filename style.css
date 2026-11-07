@@ -62,13 +62,13 @@ summary{cursor:pointer;padding:12px 0;font-weight:600;font-family:Syne,sans-seri
 #axl{position:absolute;left:12px;top:12px;z-index:5;max-width:min(360px,calc(100% - 24px));background:#050816ee;border:1px solid var(--mg);border-radius:12px;padding:10px 12px;color:#e8ecff;font-size:.85rem;box-shadow:0 0 24px #ff3df044}
 .axb{display:flex;gap:8px;margin-top:8px}.axb button{padding:4px 12px;font-size:.8rem}
 #sc{width:100%;height:280px;display:block;border-radius:16px;border:1px solid #2a3566}
-main.shake{animation:vib .09s linear infinite}@keyframes vib{25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,1px)}75%{transform:translate(1px,1px)}}
+#sc.shake{animation:vib .09s linear infinite}@keyframes vib{25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,1px)}75%{transform:translate(1px,1px)}}
 #nt{position:fixed;inset:0;width:100%;height:100%;z-index:15;opacity:0;transition:opacity 1.6s ease;pointer-events:none}#nt.on{opacity:1}
 #melatonina{position:relative;z-index:16;color:#e8ecff}#melatonina .lead{color:#c3cdf5}#melatonina article{background:#101733;border-color:#2a3566}
 .hd{width:100%;max-width:240px;display:block;margin:auto}.pn{transform-box:fill-box;transform-origin:center;animation:pn 3s ease-in-out infinite}
 @keyframes pn{50%{transform:scale(1.9);filter:drop-shadow(0 0 10px #7aa2ff)}}
 #acao{position:relative}#bl{position:absolute;inset:0;width:100%;height:100%;opacity:.55;pointer-events:none;z-index:0}#acao>:not(canvas){position:relative;z-index:1}
-@media(prefers-reduced-motion:reduce){main.shake{animation:none}#nt{transition:none}}
+@media(prefers-reduced-motion:reduce){#sc.shake{animation:none}#nt{transition:none}}
 /* ===== gráficos, microscópio, transições ===== */
 .cyc .l{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 2.6s ease,opacity .4s}.cyc.go .l{stroke-dashoffset:0}
 .cyc .l.p{transition-delay:.3s,0s}.cyc .l.lh{transition-delay:.6s,0s}.cyc .l.fsh{transition-delay:.9s,0s}
@@ -106,3 +106,8 @@ main.shake{animation:vib .09s linear infinite}@keyframes vib{25%{transform:trans
 /* ===== corpo 3D: slider de transparência e aviso do modelo masculino ===== */
 .m3op{display:flex;align-items:center;gap:10px;max-width:420px;margin:0 0 12px;color:var(--mu);font-size:.9rem}.m3op input{flex:1}
 .m3note{margin:4px 2px 0;font-size:.82rem;color:var(--mu);border-left:3px solid var(--mg);padding-left:8px}
+
+/* ===== desempenho: celular e aparelhos fracos (classe .low no <html>, definida no script) ===== */
+@media(max-width:700px){header{backdrop-filter:blur(6px)}}
+.low header{backdrop-filter:none;background:color-mix(in srgb,var(--bg) 94%,transparent)}
+.low .dv{display:none}
