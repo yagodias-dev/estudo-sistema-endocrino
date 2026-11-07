@@ -49,24 +49,58 @@ const LABEL_SHORT = { hip: 'Hipotál.', hpf: 'Hipófise', pin: 'Pineal', tir: 'T
 const DEFAULTS = JSON.parse(JSON.stringify({ MODEL, GLAND_POSITIONS }));
 // ============================================================
 
+// Cada glândula: n = nome; h = hormônios; f = função (tabela); d = doenças (dn troca o rótulo "Doenças")
+// Painel do corpo interativo: ps = "Em poucas palavras"; tx = "Explicação técnica"; pl = "Para lembrar"
 const G=[
-{id:'hip',n:'Hipotálamo',c:0xff3df0,h:'Hormônios liberadores (TRH, CRH, GnRH, GHRH) e inibidores (somatostatina, dopamina); produz ADH e ocitocina',f:'Liga o sistema nervoso ao endócrino e comanda a hipófise.',d:'Diabetes insipidus central (falta de ADH; desde 2022 também chamado deficiência de arginina-vasopressina)'},
-{id:'hpf',n:'Hipófise',c:0xffb020,h:'GH, TSH, ACTH, FSH, LH, prolactina; libera ADH e ocitocina',f:'"Centro de comando": estimula tireoide, adrenais e gônadas e regula o crescimento.',d:'Acromegalia, nanismo hipofisário'},
-{id:'pin',n:'Pineal',c:0x7aa2ff,h:'Melatonina',f:'Regula o ritmo circadiano (sono e vigília).',d:'Alterações do ritmo do sono'},
-{id:'tir',n:'Tireoide',c:0x20e0ff,sx:1.6,h:'T3, T4, calcitonina',f:'Controla o metabolismo; a calcitonina reduz o cálcio no sangue.',d:'Hipotireoidismo, hipertireoidismo'},
-{id:'par',n:'Paratireoides',m:1,c:0x7dffb0,h:'PTH',f:'Eleva o cálcio no sangue.',d:'Hipo e hiperparatireoidismo'},
-{id:'tim',n:'Timo',c:0x9dff7a,h:'Hormônios tímicos',f:'Maturação dos linfócitos T, mais ativo na infância.',d:'Diminui naturalmente com a idade (involução)',dn:'Observação'},
-{id:'adr',n:'Adrenais (suprarrenais)',m:1,c:0xff6a3d,h:'Cortisol, aldosterona, adrenalina, noradrenalina',f:'Resposta ao estresse ("luta ou fuga"), sal e água, glicose.',d:'Síndrome de Cushing, doença de Addison'},
-{id:'pan',n:'Pâncreas endócrino',c:0xffe14a,sx:2.6,h:'Insulina, glucagon, somatostatina',f:'Regula a glicemia: insulina baixa, glucagon eleva.',d:'Diabetes tipo 1 e tipo 2'},
-{id:'ova',n:'Ovários',m:1,sex:'f',c:0xff7ac8,h:'Estrogênio, progesterona',f:'Puberdade feminina e ciclo menstrual.',d:'Síndrome dos ovários policísticos (SOP)'},
-{id:'tes',n:'Testículos',m:1,sex:'m',c:0x5aa0ff,h:'Testosterona',f:'Características masculinas e produção de espermatozoides.',d:'Hipogonadismo'}];
+{id:'hip',n:'Hipotálamo',c:0xff3df0,h:'Hormônios liberadores (TRH, CRH, GnRH, GHRH) e inibidores (somatostatina, dopamina); produz ADH e ocitocina',f:'O chefe do sistema: liga o sistema nervoso ao endócrino e comanda a hipófise.',d:'Diabetes insipidus central (falta de ADH; desde 2022 também chamado deficiência de arginina-vasopressina)',
+ ps:'O chefe que liga o cérebro aos hormônios.',
+ tx:'Fica na base do cérebro e une o sistema nervoso ao endócrino. Produz <b>hormônios liberadores</b> (TRH, CRH, GnRH e GHRH), que mandam a hipófise trabalhar, e <b>inibidores</b> (somatostatina e dopamina), que a freiam. Também produz <b>ADH</b> (hormônio antidiurético, que faz os rins guardarem água) e <b>ocitocina</b>; os dois ficam guardados na neuro-hipófise (parte de trás da hipófise) até serem liberados. Ajuda a controlar temperatura, fome e sede e abriga o relógio biológico do corpo.',
+ pl:'O hipotálamo é o chefe; a hipófise, o gerente. E o "RH" no fim da sigla quer dizer "hormônio liberador": TRH libera TSH, CRH libera ACTH.'},
+{id:'hpf',n:'Hipófise',c:0xffb020,h:'GH, TSH, ACTH, FSH, LH, prolactina; libera ADH e ocitocina',f:'O gerente: recebe ordens do hipotálamo, estimula tireoide, adrenais e gônadas e regula o crescimento.',d:'Acromegalia (excesso de GH no adulto) e nanismo hipofisário (falta de GH na infância)',
+ ps:'O gerente que repassa as ordens às outras glândulas.',
+ tx:'Fica na base do crânio, numa cavidade óssea chamada sela turca. A <b>adeno-hipófise</b> (parte da frente) produz GH (hormônio do crescimento), TSH (estimula a tireoide), ACTH (estimula as adrenais), FSH e LH (estimulam as gônadas, isto é, ovários e testículos) e prolactina (produção de leite). A <b>neuro-hipófise</b> (parte de trás) libera ADH (hormônio antidiurético, que faz os rins guardarem água) e ocitocina (contrações do parto e saída do leite). Esses dois são produzidos no hipotálamo.',
+ pl:'O hipotálamo é o chefe; a hipófise, o gerente. E a sigla entrega o alvo: <b>T</b>SH → <b>T</b>ireoide; <b>A</b>CTH → <b>A</b>drenais.'},
+{id:'pin',n:'Pineal',c:0x7aa2ff,h:'Melatonina',f:'O relógio da noite: regula o ritmo circadiano (sono e vigília).',d:'Alterações do ritmo de sono e vigília',
+ ps:'O relógio que avisa ao corpo que é noite.',
+ tx:'Glândula pequena no centro do cérebro. No escuro, libera <b>melatonina</b>, hormônio que sinaliza a hora de dormir e ajusta o <b>ritmo circadiano</b> (ciclo de cerca de 24 horas de sono e vigília). A luz que chega aos olhos reduz essa liberação, por um sinal que passa pelo hipotálamo.',
+ pl:'A melatonina gosta do escuro: apagou a luz, ela sobe; acendeu a tela, ela cai.'},
+{id:'tir',n:'Tireoide',c:0x20e0ff,sx:1.6,h:'T3, T4, calcitonina',f:'O acelerador do corpo: controla o metabolismo; a calcitonina ajuda a baixar o cálcio no sangue.',d:'Hipotireoidismo e hipertireoidismo',
+ ps:'O acelerador do corpo, que define a velocidade do metabolismo.',
+ tx:'Tem forma de borboleta e fica no pescoço, à frente da traqueia. Usa <b>iodo</b> para produzir <b>T4</b> (tiroxina) e <b>T3</b> (tri-iodotironina), que regulam o <b>metabolismo</b> (conjunto de reações que produzem e gastam energia nas células). Também produz <b>calcitonina</b>, que ajuda a baixar o cálcio no sangue. É controlada pelo TSH da hipófise por <b>feedback negativo</b> (quando já há hormônio suficiente, o estímulo diminui).',
+ pl:'O número no nome conta os átomos de iodo: o T4 tem 4 e o T3 tem 3. Hipotireoidismo é o metabolismo em câmera lenta; hipertireoidismo, acelerado.'},
+{id:'par',n:'Paratireoides',m:1,c:0x7dffb0,h:'PTH (paratormônio)',f:'Os fiscais do cálcio: o PTH eleva o cálcio no sangue.',d:'Hiperparatireoidismo (excesso de PTH, cálcio alto) e hipoparatireoidismo (falta de PTH, cálcio baixo)',
+ ps:'Os fiscais do cálcio no sangue.',
+ tx:'Em geral são quatro glândulas pequenas, atrás da tireoide. Produzem <b>PTH</b> (paratormônio), que aumenta o cálcio no sangue: tira cálcio dos ossos, faz os rins perderem menos cálcio na urina e ativa a <b>vitamina D</b>, que aumenta a absorção de cálcio no intestino. A calcitonina, da tireoide, tem efeito oposto.',
+ pl:'É um cabo de guerra: o PTH puxa o cálcio para o sangue, e a calcitonina puxa para fora. Assim o nível fica equilibrado.'},
+{id:'tim',n:'Timo',c:0x9dff7a,h:'Hormônios tímicos (como a timosina)',f:'A escola das defesas: ajuda a amadurecer os linfócitos T; é mais ativo na infância.',d:'Diminui naturalmente com a idade (involução)',dn:'Observação',
+ ps:'A escola onde as células de defesa aprendem a trabalhar.',
+ tx:'Fica no tórax, atrás do esterno (osso do meio do peito). Produz <b>hormônios tímicos</b>, como a timosina, que ajudam na maturação dos <b>linfócitos T</b> (células de defesa do sistema imunológico). É maior e mais ativo na infância. Depois da puberdade, vai sendo substituído por gordura, num processo chamado <b>involução</b>.',
+ pl:'T de linfócito T, T de Timo: é nele que essas células amadurecem.'},
+{id:'adr',n:'Adrenais (suprarrenais)',m:1,c:0xff6a3d,h:'Cortisol, aldosterona, adrenalina, noradrenalina',f:'O alarme do corpo: resposta ao estresse ("luta ou fuga"), equilíbrio de sal e água e glicose.',d:'Síndrome de Cushing (excesso de cortisol) e doença de Addison (falta de cortisol e, muitas vezes, de aldosterona)',
+ ps:'O botão de alarme do corpo em situações de perigo.',
+ tx:'São duas glândulas, uma em cima de cada rim. A <b>medula</b> (parte interna) libera <b>adrenalina</b> e <b>noradrenalina</b> em segundos, na reação de luta ou fuga: o coração acelera e mais glicose fica disponível. O <b>córtex</b> (parte externa) produz <b>cortisol</b> (age no estresse prolongado e ajuda a manter a glicemia) e <b>aldosterona</b> (faz os rins reterem sódio e água, o que influencia a pressão arterial).',
+ pl:'<i>Supra</i> quer dizer "acima": a suprarrenal fica em cima do rim. A medula é o miolo e funciona como um alarme rápido; o córtex é a casca e funciona como um plano de longo prazo.'},
+{id:'pan',n:'Pâncreas endócrino',c:0xffe14a,sx:2.6,h:'Insulina, glucagon, somatostatina',f:'O regulador do açúcar: a insulina baixa a glicemia e o glucagon a eleva.',d:'Diabetes tipo 1 (falta de insulina) e tipo 2 (resistência à insulina)',
+ ps:'O regulador do açúcar no sangue.',
+ tx:'Fica atrás do estômago. As <b>ilhotas de Langerhans</b> (grupos de células endócrinas) liberam <b>insulina</b>, que baixa a <b>glicemia</b> (nível de glicose no sangue), e <b>glucagon</b>, que a aumenta. Também liberam <b>somatostatina</b>, que freia os outros dois. A maior parte do pâncreas é exócrina: produz enzimas da digestão.',
+ pl:'Insulina guarda o açúcar; glucagon tira do estoque. Um abre a despensa, o outro fecha.'},
+{id:'ova',n:'Ovários',m:1,sex:'f',c:0xff7ac8,h:'Estrogênio, progesterona',f:'Os maestros do ciclo: puberdade feminina e ciclo menstrual.',d:'Síndrome dos ovários policísticos (SOP)',
+ ps:'Os maestros do ciclo menstrual.',
+ tx:'São duas <b>gônadas</b> (glândulas sexuais) na pelve, uma de cada lado do útero. Produzem <b>estrogênio</b>, que conduz a puberdade feminina e espessa o <b>endométrio</b> (camada interna do útero), e <b>progesterona</b>, que prepara e mantém o endométrio para uma possível gravidez. Também liberam os óvulos. São comandados pelo FSH e pelo LH da hipófise.',
+ pl:'Progesterona lembra "pró-gestação": é o hormônio que prepara o útero para a gravidez.'},
+{id:'tes',n:'Testículos',m:1,sex:'m',c:0x5aa0ff,h:'Testosterona',f:'A fábrica masculina: características masculinas e produção de espermatozoides.',d:'Hipogonadismo (pouca testosterona)',
+ ps:'A fábrica de testosterona e de espermatozoides.',
+ tx:'São duas <b>gônadas</b> (glândulas sexuais) dentro da bolsa escrotal. As <b>células de Leydig</b> produzem <b>testosterona</b> sob comando do LH; ela causa as mudanças masculinas da puberdade, como voz grave e pelos. Nos <b>túbulos seminíferos</b> são produzidos os espermatozoides, o que depende do FSH e da testosterona.',
+ pl:'LH → Leydig: as duas começam com L.'}];
 G.forEach(g=>{g.p=GLAND_POSITIONS[g.id].slice();g.s=GLAND_SIZE[g.id]});
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 // texto acessível + tabela
 $('#gl').innerHTML=G.map(g=>`<li><b>${g.n}</b>: ${g.h}. ${g.f} ${g.dn||'Doenças'}: ${g.d}.</li>`).join('');
 const tb=$('#tb');tb.innerHTML=G.map(g=>`<tr><td>${g.n}</td><td>${g.h}</td><td>${g.f}</td><td>${g.d}</td></tr>`).join('');
 $('#q').oninput=e=>{const v=e.target.value.toLowerCase();[...tb.rows].forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(v))};
-function info(g){$('#panel').innerHTML=`<h3>${g.n}</h3><p><b>Hormônios:</b> ${g.h}</p><p><b>Função:</b> ${g.f}</p><p><b>${g.dn||'Doenças'}:</b> ${g.d}</p>`}
+function info(g){$('#panel').innerHTML=`<h3>${g.n}</h3><p class="pp"><b>Em poucas palavras:</b> ${g.ps}</p><p><b>Explicação técnica:</b> ${g.tx}</p><p class="pl"><b>Para lembrar:</b> ${g.pl}</p><p class="dr"><b>${g.dn||'Doenças relacionadas'}:</b> ${g.d}.</p>`}
+// no celular o painel fica logo abaixo do modelo, para não cobrir o corpo
+(()=>{const p=$('#panel'),st=p.parentNode,mq=matchMedia('(max-width:560px)');const put=()=>{if(mq.matches){p.classList.add('below');st.after(p)}else{p.classList.remove('below');st.appendChild(p)}};put();mq.addEventListener?mq.addEventListener('change',put):mq.addListener(put)})();
 // título letra por letra
 // cada palavra fica num bloco que não quebra, para o título nunca se partir no meio de uma palavra
 const t=$('#t'),tt=t.textContent;let ci=0;t.innerHTML=tt.split(' ').map(w=>`<span class="w">${[...w].map(c=>`<span class="c" style="animation-delay:${(.6+(ci++)*.04).toFixed(2)}s">${c}</span>`).join('')}</span>`).join(' ');
@@ -277,29 +311,29 @@ R.clear();cam.layers.set(1);R.render(sc,cam);R.clearDepth();cam.layers.set(0);R.
 // ===== acréscimos: seções de conteúdo =====
 const mk=(sel,arr,f)=>{$(sel).innerHTML=arr.map(f).join('')};
 mk('#dz',[
-['Diabetes tipo 1','Doença geralmente autoimune: o sistema imunológico destrói as células beta do pâncreas, e o corpo passa a produzir pouca ou nenhuma insulina. Sintomas clássicos: muita sede, urinar muito, fome e perda de peso. O tratamento exige reposição de insulina.'],
-['Diabetes tipo 2','O corpo responde mal à insulina (resistência à insulina) e, com o tempo, o pâncreas pode não compensar. Está associado a fatores como excesso de peso, sedentarismo e histórico familiar. O tratamento inclui hábitos de vida, medicamentos e, às vezes, insulina.'],
-['Hipotireoidismo','Pouco T3 e T4: o metabolismo fica mais lento. Pode causar cansaço, sensibilidade ao frio, pele seca e constipação. Uma causa comum é a tireoidite de Hashimoto, de origem autoimune.'],
-['Hipertireoidismo','Excesso de hormônios da tireoide: metabolismo acelerado. Pode causar palpitações, tremores, perda de peso e intolerância ao calor. Uma causa comum é a doença de Graves, também autoimune.'],
-['Síndrome de Cushing','Excesso prolongado de cortisol, por exemplo pelo uso de corticoides ou por tumores. Pode causar acúmulo de gordura no tronco, face arredondada, estrias, fraqueza muscular, pressão alta e glicose elevada.'],
-['Doença de Addison','Insuficiência das adrenais: falta de cortisol e, frequentemente, de aldosterona. Pode causar cansaço, perda de peso, pressão baixa e escurecimento da pele. Muitas vezes é autoimune.'],
-['Acromegalia','Excesso de GH em adultos, geralmente por um tumor benigno da hipófise. Provoca crescimento de mãos, pés e ossos da face, pois os ossos longos já não crescem em comprimento.'],
-['Nanismo hipofisário','Deficiência de GH na infância, que reduz o crescimento. Em geral as proporções do corpo são mantidas. O acompanhamento médico pode incluir reposição de GH.'],
-['Diabetes insipidus','Falta de ADH (ou resposta renal reduzida a ele): os rins perdem muita água, causando grande volume de urina diluída e muita sede. Apesar do nome parecido, não tem relação com a glicose do diabetes mellitus. Em 2022, especialistas propuseram novos nomes para evitar essa confusão: deficiência de arginina-vasopressina (quando falta ADH; arginina-vasopressina é o outro nome do ADH) e resistência à arginina-vasopressina (quando os rins não respondem a ele).'],
-['SOP (síndrome dos ovários policísticos)','Distúrbio hormonal comum em mulheres em idade reprodutiva. Pode envolver ciclos irregulares, excesso de hormônios masculinos (acne, pelos) e, em muitos casos, resistência à insulina. Diagnóstico e tratamento são individualizados.']
+['Diabetes tipo 1','O corpo para de fabricar insulina. Na maioria dos casos, a doença é <b>autoimune</b> (o sistema de defesa ataca o próprio corpo): ele destrói as <b>células beta</b> do pâncreas, que produzem insulina. Sintomas clássicos: muita sede, urinar muito, fome e perda de peso. O tratamento exige reposição de insulina.'],
+['Diabetes tipo 2','A insulina existe, mas as células "não escutam" direito. Isso se chama <b>resistência à insulina</b>; com o tempo, o pâncreas pode não conseguir compensar. Está ligado a fatores como excesso de peso, sedentarismo e histórico familiar. O tratamento inclui hábitos de vida, medicamentos e, às vezes, insulina.'],
+['Hipotireoidismo','O corpo funciona em câmera lenta. Há pouco T3 e T4, e o metabolismo fica mais lento. Pode causar cansaço, sensibilidade ao frio, pele seca e intestino preso (constipação). Uma causa comum é a <b>tireoidite de Hashimoto</b>, de origem autoimune.'],
+['Hipertireoidismo','O corpo funciona acelerado. Há excesso de hormônios da tireoide, e o metabolismo dispara. Pode causar palpitações (coração batendo forte), tremores, perda de peso e intolerância ao calor. Uma causa comum é a <b>doença de Graves</b>, também autoimune.'],
+['Síndrome de Cushing','É o excesso de cortisol por muito tempo. Pode ser causada, por exemplo, pelo uso prolongado de corticoides (remédios parecidos com o cortisol) ou por tumores. Pode causar gordura acumulada no tronco, rosto arredondado, estrias, fraqueza muscular, pressão alta e glicose elevada.'],
+['Doença de Addison','As adrenais produzem menos do que o corpo precisa: é a <b>insuficiência adrenal</b>. Falta cortisol e, muitas vezes, aldosterona. Pode causar cansaço, perda de peso, pressão baixa e escurecimento da pele. Muitas vezes é autoimune.'],
+['Acromegalia','É o excesso de GH (hormônio do crescimento) em adultos, geralmente por um tumor benigno da hipófise. Mãos, pés e ossos do rosto crescem, porque os ossos longos já não crescem em comprimento depois da adolescência.'],
+['Nanismo hipofisário','Falta GH na infância, e a criança cresce menos. Em geral, as proporções do corpo se mantêm. O acompanhamento médico pode incluir reposição de GH.'],
+['Diabetes insipidus','Os rins deixam a água escapar. Isso acontece por falta de ADH (hormônio antidiurético) ou porque os rins respondem pouco a ele. A pessoa produz muita urina diluída e sente muita sede. Apesar do nome parecido, não tem relação com a glicose do diabetes mellitus. Em 2022, especialistas propuseram novos nomes para evitar essa confusão: deficiência de arginina-vasopressina (quando falta ADH; arginina-vasopressina é o outro nome do ADH) e resistência à arginina-vasopressina (quando os rins não respondem a ele).'],
+['SOP (síndrome dos ovários policísticos)','É um desequilíbrio hormonal comum em mulheres em idade reprodutiva. Pode envolver ciclos menstruais irregulares, excesso de <b>andrógenos</b> (hormônios masculinos, que causam acne e pelos) e, em muitos casos, resistência à insulina. Diagnóstico e tratamento são feitos caso a caso pelo médico.']
 ],d=>`<details><summary>${d[0]}</summary><p>${d[1]}</p></details>`);
 mk('#tl',[
-['Infância','GH e hormônios da tireoide são essenciais para o crescimento e para o desenvolvimento do cérebro.'],
-['Adolescência','O hipotálamo libera GnRH, que estimula a hipófise (LH e FSH) e as gônadas a produzir hormônios sexuais: é a puberdade.'],
-['Gravidez','A placenta produz hormônios como hCG, progesterona e estrogênio, que sustentam a gestação. No parto, a ocitocina contrai o útero; na amamentação, prolactina e ocitocina atuam.'],
-['Menopausa','Os ovários reduzem a produção de estrogênio e progesterona, e os ciclos menstruais cessam.'],
-['Envelhecimento','Mudanças graduais: GH e hormônios sexuais tendem a diminuir, e a resposta à insulina pode piorar. A variação entre pessoas é grande.']
+['Infância','É a fase de crescer e formar o cérebro. O GH (hormônio do crescimento) e os hormônios da tireoide são essenciais para o crescimento e para o desenvolvimento do cérebro.'],
+['Adolescência','O corpo recebe o sinal para amadurecer. O hipotálamo libera GnRH, que estimula a hipófise a liberar LH e FSH; estes fazem as gônadas (ovários ou testículos) produzirem hormônios sexuais. Essa fase é a puberdade.'],
+['Gravidez','Um órgão novo também produz hormônios: a placenta. Ela libera hCG, progesterona e estrogênio, que sustentam a gestação. No parto, a ocitocina contrai o útero; na amamentação, a prolactina produz o leite e a ocitocina faz o leite sair.'],
+['Menopausa','Os ovários diminuem o ritmo. Eles reduzem a produção de estrogênio e progesterona, e os ciclos menstruais param.'],
+['Envelhecimento','As mudanças são lentas e variam muito entre as pessoas. O GH e os hormônios sexuais tendem a diminuir, e a resposta à insulina pode piorar.']
 ],d=>`<li class="tli"><h3>${d[0]}</h3><p>${d[1]}</p></li>`);
 mk('#hb',[
-['😴 Sono','A melatonina sobe no escuro, e o GH é liberado principalmente durante o sono profundo. Dormir mal pode alterar cortisol, apetite e controle da glicose.'],
-['🥗 Alimentação','Refeições estimulam a insulina. Excesso crônico de açúcar e ganho de gordura favorecem a resistência à insulina. O iodo é necessário para produzir T3 e T4.'],
-['🏃 Exercício','Músculos em atividade captam glicose e o exercício melhora a sensibilidade à insulina. Também libera adrenalina e favorece o sono.'],
-['🧘 Estresse','O estresse ativa o eixo hipotálamo-hipófise-adrenal e libera cortisol. Se for crônico, pode afetar sono, pressão e glicose.']
+['😴 Sono','Dormir também é trabalho hormonal. A melatonina sobe no escuro, e o GH é liberado principalmente durante o sono profundo. Dormir mal pode alterar o cortisol, o apetite e o controle da glicose.'],
+['🥗 Alimentação','O que você come conversa com os hormônios. As refeições estimulam a insulina. O excesso frequente de açúcar e o ganho de gordura favorecem a resistência à insulina. O iodo da alimentação é necessário para produzir T3 e T4.'],
+['🏃 Exercício','Músculo em movimento consome açúcar. Os músculos em atividade captam glicose, e o exercício melhora a sensibilidade à insulina (a resposta das células a ela). Também libera adrenalina e favorece o sono.'],
+['🧘 Estresse','O estresse aciona o alarme do corpo. Ele ativa o eixo hipotálamo-hipófise-adrenal, que libera cortisol. Se o estresse for constante (crônico), pode afetar o sono, a pressão e a glicose.']
 ],d=>`<article><h3>${d[0]}</h3><p>${d[1]}</p></article>`);
 mk('#mt',[
 ['Comer açúcar causa diabetes tipo 1.','Mito','O tipo 1 é autoimune. Já o tipo 2 tem vários fatores de risco, incluindo excesso de peso e sedentarismo.'],
@@ -348,7 +382,7 @@ const MOB=matchMedia('(pointer:coarse)').matches||innerWidth<700;
 const loopOn=(el,fn,thr,cb)=>{let id=0,vis=0,l=0;const f=t=>{fn(t,t-l);l=t;id=vis?requestAnimationFrame(f):0};new IntersectionObserver(e=>{vis=e[0].isIntersecting;cb&&cb(vis);if(vis&&!id){l=performance.now();id=requestAnimationFrame(f)}},{threshold:thr||.1}).observe(el)};
 // --- eixo hipotálamo → hipófise → glândula-alvo ---
 (()=>{const b=$('#ax'),lg=$('#axl'),LB=b.textContent,BO=[['hip'],['hpf'],['tir','adr','ova','tes'],['hip','hpf']];let on=0,step=0,iv=0,E,segs=[];
-const TX=['<b>Etapa 1/4 · Comando.</b> O hipotálamo libera hormônios liberadores (como TRH, CRH e GnRH) que chegam à hipófise.','<b>Etapa 2/4 · Hipófise.</b> A hipófise responde liberando hormônios que estimulam outras glândulas: TSH, ACTH, FSH e LH.','<b>Etapa 3/4 · Glândulas-alvo.</b> Tireoide (T3 e T4), adrenais (cortisol) e gônadas (hormônios sexuais) produzem seus hormônios.','<b>Etapa 4/4 · Feedback.</b> Os hormônios finais voltam ao hipotálamo e à hipófise e freiam o estímulo (feedback negativo).'];
+const TX=['<b>Etapa 1/4 · O chefe dá a ordem.</b> O hipotálamo libera hormônios liberadores (como TRH, CRH e GnRH), que chegam à hipófise.','<b>Etapa 2/4 · O gerente repassa.</b> A hipófise libera hormônios que estimulam outras glândulas: TSH, ACTH, FSH e LH.','<b>Etapa 3/4 · As equipes trabalham.</b> As glândulas-alvo produzem seus hormônios: tireoide (T3 e T4), adrenais (cortisol) e gônadas (hormônios sexuais).','<b>Etapa 4/4 · Pronto, pode parar.</b> Os hormônios finais voltam ao hipotálamo e à hipófise e freiam o estímulo: é o feedback negativo.'];
 const P=(id,s=1)=>{const g=G.find(x=>x.id==id);return new THREE.Vector3(g.p[0]*s,g.p[1],g.p[2])};
 function add(a,bb,st,col,sx){const d=bb.clone().sub(a),L=d.length();const m=new THREE.Mesh(new THREE.CylinderGeometry(.003,.003,L,6),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.05,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.copy(a).add(bb).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());
 const n=MOB?7:16,pa=new Float32Array(n*3),pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pa,3));const pt=new THREE.Points(pg,new THREE.PointsMaterial({color:col,size:.03,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));m.visible=pt.visible=false;E.grp.add(m,pt);segs.push({a,b:bb,st,sx,m,pt,pa,n})}
@@ -410,7 +444,7 @@ const C=[['e','#ff3df0',[[0,.12],[3,.1],[7,.3],[11,.65],[13,.95],[14.5,.5],[18,.
 sv.innerHTML=B.map(([n,a,b,c])=>`<rect x="${sx(a)}" y="20" width="${sx(b)-sx(a)}" height="240" fill="${c}" opacity=".09"/><text x="${(sx(a)+sx(b))/2}" y="38" text-anchor="middle" font-size="10.5" fill="${c}">${n}</text>`).join('')
 +`<path d="M50 20V260H670" fill="none" stroke="currentColor" stroke-opacity=".35"/><g fill="currentColor" font-size="11" text-anchor="middle">${[1,7,14,21,28].map(k=>`<text x="${sx(k-1)}" y="278">dia ${k}</text>`).join('')}<text x="360" y="296" font-size="10" fill-opacity=".7">dias do ciclo (exemplo) · altura = nível relativo</text></g>`
 +C.map(([k,c,p])=>`<path class="l ${k}" pathLength="1" stroke="${c}" d="${cr(p)}"/>`).join('');
-const T={all:'Todos juntos: o FSH estimula os folículos, o estrogênio sobe, o pico de LH desencadeia a ovulação e, depois, a progesterona domina a fase lútea.',e:'Estrogênio: cresce na fase folicular, atinge o pico perto da ovulação e tem um segundo aumento menor na fase lútea. Ajuda a espessar o endométrio.',p:'Progesterona: sobe após a ovulação (corpo lúteo) e prepara e mantém o endométrio. Se não há gravidez, cai e ocorre a menstruação.',lh:'LH: tem um pico (surto) pouco antes da ovulação, que desencadeia a liberação do óvulo.',fsh:'FSH: estimula o crescimento dos folículos no início do ciclo e tem um pequeno aumento junto com o LH no meio do ciclo.'};
+const T={all:'Todos juntos, como num revezamento: o FSH estimula os folículos (bolsinhas que guardam os óvulos), o estrogênio sobe, o pico de LH desencadeia a ovulação e, depois, a progesterona domina a fase lútea.',e:'Estrogênio, o construtor: espessa o endométrio (camada interna do útero). Cresce na fase folicular, atinge o pico perto da ovulação e tem um segundo aumento, menor, na fase lútea.',p:'Progesterona, a guardiã: prepara e mantém o endométrio. Sobe após a ovulação, produzida pelo corpo lúteo (o que sobra do folículo depois de soltar o óvulo). Se não há gravidez, ela cai e ocorre a menstruação.',lh:'LH, o gatilho: tem um pico (surto) pouco antes da ovulação, e esse pico faz o ovário liberar o óvulo.',fsh:'FSH, o que dá a largada: estimula o crescimento dos folículos no início do ciclo e tem um pequeno aumento junto com o LH no meio do ciclo.'};
 const tx=$('#cyt');tx.textContent=T.all;
 $('#cyb').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#cyb button').forEach(x=>x.classList.remove('on'));b.classList.add('on');if(b.dataset.h=='all')delete sv.dataset.hl;else sv.dataset.hl=b.dataset.h;tx.textContent=T[b.dataset.h]});
 if(RM)sv.classList.add('go');else new IntersectionObserver(e=>{if(e[0].isIntersecting)sv.classList.add('go')},{threshold:.35}).observe(sv)})();
@@ -430,7 +464,7 @@ P.forEach(([x,y])=>{const q=R();S.push({t:'c',k:q<.68?'be':q<.9?'al':'de',x,y,r:
 return S}
 const CD={str:'#5a2f6a',cap:'#b52a3d',rbc:'#e8505f',cel:'#c777b5',col:'#f6cfe0',nuc:'#4b1b6d',aci:'#9a6fb0',nuc2:'#3d1558',be:'#ff3df0',al:'#20e0ff',de:'#ffb020'},CL={str:'#4a2a58',cap:'#7a2a44',cel:'#8b5a96',col:'#d9a8c6',aci:'#8a64a0',be:'#a0509a',al:'#a0509a',de:'#a0509a'};
 const svg=(S,det)=>'<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice"><rect width="800" height="400" fill="'+(det?'#3a1d4d':'#2a1740')+'"/>'+S.map(s=>{const c=det?CD[s.k]:CL[s.k];if(!c)return'';if(s.t=='c')return`<circle cx="${s.x|0}" cy="${s.y|0}" r="${s.r}" fill="${c}"${s.k=='str'?' opacity=".4"':''}/>`;if(s.t=='e')return`<ellipse cx="${s.x|0}" cy="${s.y|0}" rx="${s.rx}" ry="${s.ry}" fill="${c}" transform="rotate(${s.rot|0} ${s.x|0} ${s.y|0})"/>`;return`<path d="${s.d}" fill="none" stroke="${c}" stroke-width="${det?8:10}" stroke-linecap="round"/>`}).join('')+'</svg>';
-const TX={tir:'Tireoide: folículos com coloide (reserva de hormônio tireoidiano) cercados por células foliculares. Os capilares vermelhos levam os hormônios ao sangue.',pan:'Ilhota pancreática: células beta (magenta, insulina, predominam), alfa (ciano, glucagon) e delta (âmbar, somatostatina). Ao redor, ácinos exócrinos (enzimas digestivas).'};
+const TX={tir:'Tireoide: bolsinhas cheias de reserva de hormônio. Cada bolsinha é um folículo, com coloide (estoque de hormônio da tireoide) no meio e células foliculares em volta. Os capilares (vasos finos, em vermelho) levam os hormônios ao sangue.',pan:'Ilhota pancreática: uma ilha de células que produzem hormônios. Há células beta (magenta, insulina; são a maioria), alfa (ciano, glucagon) e delta (âmbar, somatostatina). Em volta ficam os ácinos, a parte exócrina, que fabrica enzimas da digestão.'};
 function render(){const S=data(cur);low.innerHTML=svg(S,0);mz.innerHTML=svg(S,1);$('#mst').textContent=TX[cur]}
 function size(){W=ms.clientWidth;H=ms.clientHeight;r=W<560?58:85;lens.style.width=lens.style.height=2*r+'px';mz.style.width=W*Z+'px';mz.style.height=H*Z+'px';place(px||W/2,py||H/2)}
 function place(x,y){px=Math.max(0,Math.min(W,x));py=Math.max(0,Math.min(H,y));lens.style.transform=`translate3d(${px-r}px,${py-r}px,0)`;mz.style.transform=`translate3d(${r-px*Z}px,${r-py*Z}px,0)`}

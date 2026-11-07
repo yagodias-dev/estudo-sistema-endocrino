@@ -22,7 +22,8 @@ h1 .w{display:inline-block;white-space:nowrap}h1 .c{display:inline-block;opacity
 .zh{position:absolute;z-index:6;left:50%;top:12px;transform:translateX(-50%);margin:0;padding:6px 14px;border-radius:99px;background:#050816ee;border:1px solid var(--cy);color:#e8ecff;font-size:.85rem;pointer-events:none;white-space:nowrap}
 /* rótulos do modelo 3D: ver bloco "corpo 3D" no fim do arquivo */
 #panel{position:absolute;z-index:4;right:12px;bottom:12px;width:min(340px,calc(100% - 24px));max-height:60%;overflow:auto;background:#050816ee;border:1px solid var(--cy);border-radius:14px;padding:14px;color:#e8ecff;font-size:.9rem;box-shadow:0 0 30px #20e0ff44}
-#panel h3{margin:0 0 6px;color:var(--cy)}#panel p{margin:.3em 0}
+#panel h3{margin:0 0 6px;color:var(--cy)}#panel p{margin:.45em 0}#panel .pp{font-size:1.02rem}#panel .pp b,#panel .pl b{color:var(--am)}#panel .pl{border-left:3px solid var(--mg);padding-left:8px}#panel .dr{color:#c3cdf5;font-size:.85rem}
+#panel.below{position:static;width:auto;max-height:none;margin-top:10px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
 article,.sim{background:var(--cd);border:1px solid #2a3566;border-radius:16px;padding:20px;transition:.3s}article:hover{transform:translateY(-6px);border-color:var(--mg);box-shadow:0 10px 40px #ff3df022}
 .chain{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}.chain span{padding:10px 14px;border-radius:12px;border:1px solid var(--cy);transition:.4s}.chain span.hot{background:var(--mg);box-shadow:0 0 24px var(--mg);color:#000}
