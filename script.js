@@ -392,9 +392,14 @@ const p=$('#pool');shuf(D.flatMap((d,i)=>[['g',d[1],i],['f',d[2],i]])).forEach((
 function sc(){$('#js').textContent=`Acertos: ${ok}/12 · Erros: ${er}`+(ok==12?' — Parabéns, você ligou tudo!':'');$('#jre').hidden=ok<12}
 function sel(c){if(sl)sl.classList.remove('sel');sl=c;c.classList.add('sel');$('#js').textContent='Selecionado: '+c.textContent+'. Agora escolha o espaço de '+(c.dataset.t=='g'?'glândula':'função')+' certo.'}
 function drop(c,s){if(s.dataset.done||c.dataset.t!=s.dataset.t)return;if(c.dataset.h==s.dataset.h){s.textContent=c.textContent;s.classList.add('good');s.dataset.done=1;c.remove();ok++}else{er++;s.classList.add('bad');setTimeout(()=>s.classList.remove('bad'),600);c.classList.remove('sel')}sl=null;sc()}
-root.addEventListener('pointerdown',e=>{const c=e.target.closest('.chip');if(!c)return;c.setPointerCapture(e.pointerId);const x0=e.clientX,y0=e.clientY;let mv=0;
-c.onpointermove=ev=>{const dx=ev.clientX-x0,dy=ev.clientY-y0;if(Math.abs(dx)+Math.abs(dy)>6)mv=1;if(mv){c.style.transform=`translate(${dx}px,${dy}px)`;c.classList.add('drag')}};
-c.onpointerup=ev=>{c.onpointermove=c.onpointerup=null;c.style.pointerEvents='none';const el=document.elementFromPoint(ev.clientX,ev.clientY);c.style.pointerEvents='';c.style.transform='';c.classList.remove('drag');if(mv){const s=el&&el.closest('.slot');if(s)drop(c,s)}else sel(c)}});
+root.addEventListener('pointerdown',e=>{const c=e.target.closest('.chip');if(!c)return;c.setPointerCapture(e.pointerId);const x0=e.clientX,y0=e.clientY,s0=scrollY;let mv=0,cx=x0,cy=y0,ar=0;
+// o cartão acompanha o dedo mesmo quando a página rola (soma o quanto a página andou)
+const pos=()=>{c.style.transform=`translate(${cx-x0}px,${cy-y0+scrollY-s0}px)`};
+// no celular o tabuleiro é mais alto que a tela: arrastando perto da borda de cima ou de baixo, a página rola sozinha
+const auto=()=>{ar=0;if(!mv||!c.onpointermove)return;const m=70,v=cy<m?-(m-cy)/4:cy>innerHeight-m?(cy-innerHeight+m)/4:0;if(v){scrollBy({top:v,behavior:'instant'});pos();ar=requestAnimationFrame(auto)}};
+c.onpointermove=ev=>{cx=ev.clientX;cy=ev.clientY;if(Math.abs(cx-x0)+Math.abs(cy-y0)>6)mv=1;if(mv){pos();c.classList.add('drag');if(!ar)ar=requestAnimationFrame(auto)}};
+c.onpointercancel=()=>{cancelAnimationFrame(ar);ar=0;c.onpointermove=c.onpointerup=c.onpointercancel=null;c.style.transform='';c.classList.remove('drag')};
+c.onpointerup=ev=>{cancelAnimationFrame(ar);ar=0;c.onpointermove=c.onpointerup=c.onpointercancel=null;c.style.pointerEvents='none';const el=document.elementFromPoint(ev.clientX,ev.clientY);c.style.pointerEvents='';c.style.transform='';c.classList.remove('drag');if(mv){const s=el&&el.closest('.slot');if(s)drop(c,s)}else sel(c)}});
 root.addEventListener('click',e=>{const s=e.target.closest('.slot');if(s&&sl)drop(sl,s)});
 root.addEventListener('keydown',e=>{if(e.key=='Enter'||e.key==' '){if(e.target.closest('.chip,.slot'))e.preventDefault();const c=e.target.closest('.chip');if(c)sel(c);else if(e.target.closest('.slot')&&sl)drop(sl,e.target.closest('.slot'))}});
 build()})();
